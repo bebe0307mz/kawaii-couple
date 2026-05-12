@@ -19,9 +19,31 @@ export const GAME_NAMES = [
   'Reflex Duel',
   'Word Scramble',
   'Kawaii Quiz',
+  'Target Pop',
+  'Math Race',
+  'Color Stroop',
+  'Sakura Catch',
+  'Emoji Decode',
+  'Simon Says',
+  'Type Race',
+  'Rock Paper Sakura',
+  'Star Catcher',
+  'Number Rush',
 ]
 
-export const GAME_EMOJIS = ['💝', '🃏', '⚡', '🔤', '🧠']
+export const GAME_EMOJIS = ['💝', '🃏', '⚡', '🔤', '🧠', '🎯', '🔢', '🎨', '🌸', '💬', '🎵', '⌨️', '✂️', '🌟', '🔢']
+
+export function selectGamesForSession(code: string): number[] {
+  // Seeded from code so both players get same 5 games
+  let seed = code.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
+  const games = Array.from({ length: 15 }, (_, i) => i)
+  for (let i = games.length - 1; i > 0; i--) {
+    seed = (seed * 1664525 + 1013904223) & 0xffffffff
+    const j = Math.abs(seed) % (i + 1)
+    ;[games[i], games[j]] = [games[j], games[i]]
+  }
+  return games.slice(0, 5)
+}
 
 export const KAWAII_WORDS = [
   'SAKURA', 'KAWAII', 'MOCHI', 'SENPAI', 'BENTO',

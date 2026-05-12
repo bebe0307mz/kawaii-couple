@@ -3,12 +3,22 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { calcWinner, GAME_NAMES, GAME_EMOJIS } from '@/lib/gameUtils'
+import { calcWinner, GAME_NAMES, GAME_EMOJIS, selectGamesForSession } from '@/lib/gameUtils'
 import HeartTap from '@/components/games/HeartTap'
 import LoveMemory from '@/components/games/LoveMemory'
 import ReflexDuel from '@/components/games/ReflexDuel'
 import WordScramble from '@/components/games/WordScramble'
 import KawaiiQuiz from '@/components/games/KawaiiQuiz'
+import TargetPop from '@/components/games/TargetPop'
+import MathRace from '@/components/games/MathRace'
+import ColorStroop from '@/components/games/ColorStroop'
+import SakuraCatch from '@/components/games/SakuraCatch'
+import EmojiDecode from '@/components/games/EmojiDecode'
+import SimonMemory from '@/components/games/SimonMemory'
+import TypeRace from '@/components/games/TypeRace'
+import RockPaperSakura from '@/components/games/RockPaperSakura'
+import StarCatcher from '@/components/games/StarCatcher'
+import NumberRush from '@/components/games/NumberRush'
 import type { User } from '@supabase/supabase-js'
 import type { GameSession, GameScore } from '@/lib/supabase'
 
@@ -32,7 +42,9 @@ export default function GamePage() {
   const [opponentGameScore, setOpponentGameScore] = useState<number | null>(null)
   const [gameScores, setGameScores] = useState<GameScore[]>([])
   const [opponentEmail, setOpponentEmail] = useState('')
+  const [selectedGames, setSelectedGames] = useState<number[]>([0, 1, 2, 3, 4])
   const waitingRef = useRef(false)
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
   useEffect(() => {
     async function init() {
@@ -65,12 +77,13 @@ export default function GamePage() {
       setOpponentScore(sess.player1_id === user.id ? sess.player2_score : sess.player1_score)
       setCurrentGame(sess.current_game || 0)
       setGameScores(sess.game_scores || [])
+      setSelectedGames(selectGamesForSession(code))
       setLoading(false)
     }
     init()
   }, [code, router])
 
-  // Realtime subscription for game events
+  // Realtime subscription - subscribe ONCE, store in ref
   useEffect(() => {
     if (!user || !playerRole) return
 
@@ -85,7 +98,6 @@ export default function GamePage() {
       .on('broadcast', { event: 'game_ready' }, (payload) => {
         const p = payload.payload as { player_email: string; game: number }
         if (p.player_email !== user.email) {
-          // Opponent is ready for next game
           if (waitingRef.current) {
             advanceGame()
           }
@@ -93,9 +105,41 @@ export default function GamePage() {
       })
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
+    channelRef.current = channel
+
+    return () => {
+      supabase.removeChannel(channel)
+      channelRef.current = null
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, playerRole, code])
+
+  // Polling fallback during results phase - check DB if opponent score is missing
+  useEffect(() => {
+    if (phase !== 'results' || opponentGameScore !== null) return
+    const poll = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/sessions/${code}`)
+        const data = await res.json()
+        if (!data.session) return
+        const sess: GameSession = data.session
+        // Check if session advanced (player1 already wrote the next game state)
+        if (sess.current_game !== undefined && sess.current_game > currentGame) {
+          // Session already moved on - the scores must have been submitted
+          // Read scores from game_scores array
+          const scores: GameScore[] = sess.game_scores || []
+          const roundScore = scores.find((s) => s.game === currentGame)
+          if (roundScore) {
+            const oppScore = playerRole === 'player1' ? roundScore.player2 : roundScore.player1
+            setOpponentGameScore(oppScore)
+          }
+        }
+      } catch {
+        // ignore poll errors
+      }
+    }, 2000)
+    return () => clearInterval(poll)
+  }, [phase, opponentGameScore, code, currentGame, playerRole])
 
   // Countdown logic
   useEffect(() => {
@@ -119,21 +163,18 @@ export default function GamePage() {
     setMyGameScore(score)
     setPhase('results')
 
-    // Broadcast score
-    const channel = supabase.channel(`game:${code}`)
-    await channel.send({
-      type: 'broadcast',
-      event: 'game_score',
-      payload: { player_email: user.email, game: currentGame, score },
-    })
+    // Broadcast score via the persistent channel ref
+    if (channelRef.current) {
+      await channelRef.current.send({
+        type: 'broadcast',
+        event: 'game_score',
+        payload: { player_email: user.email, game: currentGame, score },
+      })
+    }
 
-    // Update session score
-    const newMyTotal = myScore + 1  // Will be computed from game winner
-
-    // Wait for opponent score then update DB
     waitingRef.current = true
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, playerRole, session, code, currentGame, myScore])
+  }, [user, playerRole, session, currentGame])
 
   async function advanceGame() {
     if (!user || !playerRole || !session) return
@@ -198,13 +239,14 @@ export default function GamePage() {
 
   async function handleNextGame() {
     if (!user) return
-    // Broadcast ready
-    const channel = supabase.channel(`game:${code}`)
-    await channel.send({
-      type: 'broadcast',
-      event: 'game_ready',
-      payload: { player_email: user.email, game: currentGame },
-    })
+    // Broadcast ready via persistent channel
+    if (channelRef.current) {
+      await channelRef.current.send({
+        type: 'broadcast',
+        event: 'game_ready',
+        payload: { player_email: user.email, game: currentGame },
+      })
+    }
 
     // If we already have opponent score, advance now
     if (opponentGameScore !== null) {
@@ -234,6 +276,47 @@ export default function GamePage() {
     return 'tie'
   })()
 
+  // Get the actual game index (0-14) for the current slot
+  const gameIndex = selectedGames[currentGame] ?? currentGame
+
+  function renderGame() {
+    const email = user?.email || ''
+    switch (gameIndex) {
+      case 0:
+        return <HeartTap onComplete={handleGameComplete} playerEmail={email} />
+      case 1:
+        return <LoveMemory onComplete={handleGameComplete} playerEmail={email} />
+      case 2:
+        return <ReflexDuel onComplete={handleGameComplete} playerEmail={email} />
+      case 3:
+        return <WordScramble onComplete={handleGameComplete} playerEmail={email} sessionCode={code} />
+      case 4:
+        return <KawaiiQuiz onComplete={handleGameComplete} playerEmail={email} />
+      case 5:
+        return <TargetPop onComplete={handleGameComplete} playerEmail={email} />
+      case 6:
+        return <MathRace onComplete={handleGameComplete} playerEmail={email} />
+      case 7:
+        return <ColorStroop onComplete={handleGameComplete} playerEmail={email} />
+      case 8:
+        return <SakuraCatch onComplete={handleGameComplete} playerEmail={email} />
+      case 9:
+        return <EmojiDecode onComplete={handleGameComplete} playerEmail={email} />
+      case 10:
+        return <SimonMemory onComplete={handleGameComplete} playerEmail={email} />
+      case 11:
+        return <TypeRace onComplete={handleGameComplete} playerEmail={email} />
+      case 12:
+        return <RockPaperSakura onComplete={handleGameComplete} playerEmail={email} sessionCode={code} />
+      case 13:
+        return <StarCatcher onComplete={handleGameComplete} playerEmail={email} />
+      case 14:
+        return <NumberRush onComplete={handleGameComplete} playerEmail={email} />
+      default:
+        return <HeartTap onComplete={handleGameComplete} playerEmail={email} />
+    }
+  }
+
   return (
     <div className="relative min-h-screen flex flex-col" style={{ maxHeight: '100dvh', overflow: 'hidden' }}>
       {/* Countdown overlay */}
@@ -241,7 +324,7 @@ export default function GamePage() {
         <div className="countdown-overlay z-50">
           <div className="text-center">
             <div className="pixel-font text-xs text-white mb-4">
-              {GAME_EMOJIS[currentGame]} Game {currentGame + 1}/5: {GAME_NAMES[currentGame]}
+              {GAME_EMOJIS[gameIndex]} Game {currentGame + 1}/5: {GAME_NAMES[gameIndex]}
             </div>
             <div className="countdown-number">{countdown || 'GO!'}</div>
           </div>
@@ -261,9 +344,9 @@ export default function GamePage() {
             <div className="pixel-font text-xs text-gray-500">
               Game {currentGame + 1}/5
             </div>
-            <div className="text-xl">{GAME_EMOJIS[currentGame]}</div>
+            <div className="text-xl">{GAME_EMOJIS[gameIndex]}</div>
             <div className="pixel-font text-xs text-[#FF1493]">
-              {GAME_NAMES[currentGame]}
+              {GAME_NAMES[gameIndex]}
             </div>
           </div>
 
@@ -274,7 +357,7 @@ export default function GamePage() {
           </div>
         </div>
 
-        {/* Game progress dots */}
+        {/* Game progress dots - always 5 */}
         <div className="flex justify-center gap-2">
           {Array.from({ length: 5 }, (_, i) => (
             <div
@@ -290,33 +373,11 @@ export default function GamePage() {
 
       {/* Game area */}
       <div className="flex-1 flex flex-col overflow-hidden" style={{ minHeight: 0 }}>
-        {phase === 'playing' && (
-          <>
-            {currentGame === 0 && (
-              <HeartTap onComplete={handleGameComplete} playerEmail={user?.email || ''} />
-            )}
-            {currentGame === 1 && (
-              <LoveMemory onComplete={handleGameComplete} playerEmail={user?.email || ''} />
-            )}
-            {currentGame === 2 && (
-              <ReflexDuel onComplete={handleGameComplete} playerEmail={user?.email || ''} />
-            )}
-            {currentGame === 3 && (
-              <WordScramble
-                onComplete={handleGameComplete}
-                playerEmail={user?.email || ''}
-                sessionCode={code}
-              />
-            )}
-            {currentGame === 4 && (
-              <KawaiiQuiz onComplete={handleGameComplete} playerEmail={user?.email || ''} />
-            )}
-          </>
-        )}
+        {phase === 'playing' && renderGame()}
 
         {phase === 'results' && (
           <div className="flex-1 flex flex-col items-center justify-center text-center px-4 py-8 gap-4">
-            <div className="text-5xl">{GAME_EMOJIS[currentGame]}</div>
+            <div className="text-5xl">{GAME_EMOJIS[gameIndex]}</div>
             <h2 className="pixel-font text-sm text-[#FF1493]">
               Game {currentGame + 1} Results
             </h2>
