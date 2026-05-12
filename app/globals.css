@@ -1,0 +1,264 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap');
+
+@import "tailwindcss";
+
+:root {
+  --pink-hot: #FF69B4;
+  --pink-deep: #FF1493;
+  --pink-soft: #FFB6C1;
+  --pink-light: #FFF0F5;
+  --lavender: #E6CCFF;
+  --lavender-deep: #C084FC;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: linear-gradient(135deg, #FFF0F5 0%, #FFE4F0 30%, #F3E8FF 70%, #FFE4F0 100%);
+  min-height: 100vh;
+  color: #1a1a1a;
+}
+
+h1, h2, h3, .pixel-font {
+  font-family: 'Press Start 2P', monospace;
+}
+
+.btn-pixel {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.75rem;
+  padding: 12px 24px;
+  background: #FF69B4;
+  color: white;
+  border: 3px solid #1a1a1a;
+  box-shadow: 4px 4px 0px #FF1493;
+  cursor: pointer;
+  transition: all 0.1s;
+  display: inline-block;
+  text-decoration: none;
+  user-select: none;
+}
+
+.btn-pixel:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #FF1493;
+}
+
+.btn-pixel:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #FF1493;
+}
+
+.btn-pixel-white {
+  background: white;
+  color: #FF69B4;
+  box-shadow: 4px 4px 0px #FF69B4;
+}
+
+.btn-pixel-white:hover {
+  box-shadow: 6px 6px 0px #FF69B4;
+}
+
+.btn-pixel-lavender {
+  background: #E6CCFF;
+  color: #1a1a1a;
+  box-shadow: 4px 4px 0px #C084FC;
+}
+
+.btn-pixel-lavender:hover {
+  box-shadow: 6px 6px 0px #C084FC;
+}
+
+.card-pixel {
+  background: white;
+  border: 3px solid #1a1a1a;
+  box-shadow: 6px 6px 0px #FF69B4;
+}
+
+.card-pixel-lavender {
+  background: white;
+  border: 3px solid #1a1a1a;
+  box-shadow: 6px 6px 0px #C084FC;
+}
+
+.input-pixel {
+  font-family: 'Nunito', sans-serif;
+  border: 3px solid #1a1a1a;
+  padding: 10px 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  outline: none;
+  background: white;
+  transition: box-shadow 0.1s;
+}
+
+.input-pixel:focus {
+  box-shadow: 4px 4px 0px #FF69B4;
+}
+
+.sakura-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.sakura-petal {
+  position: absolute;
+  top: -20px;
+  font-size: 1.2rem;
+  animation: sakura-fall linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes sakura-fall {
+  0% {
+    transform: translateY(0) rotate(0deg) translateX(0);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(50vh) rotate(180deg) translateX(30px);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(110vh) rotate(360deg) translateX(-20px);
+    opacity: 0;
+  }
+}
+
+@keyframes dots {
+  0%, 20%   { content: ''; }
+  40%       { content: '.'; }
+  60%       { content: '..'; }
+  80%, 100% { content: '...'; }
+}
+
+.loading-dots::after {
+  content: '';
+  animation: dots 1.5s steps(4, end) infinite;
+}
+
+.progress-pixel {
+  height: 20px;
+  background: #FFB6C1;
+  border: 2px solid #1a1a1a;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FF69B4, #FF1493);
+  transition: width 0.3s ease;
+}
+
+.countdown-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 105, 180, 0.85);
+  z-index: 50;
+}
+
+.countdown-number {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6rem;
+  color: white;
+  text-shadow: 6px 6px 0px #FF1493;
+  animation: countdown-pop 0.8s ease-out;
+}
+
+@keyframes countdown-pop {
+  0%   { transform: scale(2); opacity: 0; }
+  50%  { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes heart-fall {
+  0%   { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+.heart-falling {
+  position: fixed;
+  font-size: 2rem;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: heart-fall linear forwards;
+  user-select: none;
+  z-index: 10;
+}
+
+.memory-card {
+  perspective: 600px;
+}
+
+.memory-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.4s;
+  transform-style: preserve-3d;
+}
+
+.memory-card.flipped .memory-card-inner {
+  transform: rotateY(180deg);
+}
+
+.memory-card-front,
+.memory-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.memory-card-back {
+  transform: rotateY(180deg);
+}
+
+@keyframes pulse-pink {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 105, 180, 0.4); }
+  50%       { box-shadow: 0 0 0 20px rgba(255, 105, 180, 0); }
+}
+
+.pulse-pink {
+  animation: pulse-pink 1.5s infinite;
+}
+
+@keyframes bounce-kawaii {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+.bounce-kawaii {
+  animation: bounce-kawaii 1s ease-in-out infinite;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50%       { transform: rotate(3deg); }
+}
+
+.wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+@keyframes flash-ready {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.flash-ready {
+  animation: flash-ready 0.8s ease-in-out infinite;
+}
