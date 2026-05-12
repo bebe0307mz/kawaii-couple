@@ -95,11 +95,11 @@ export default function ResultsPage() {
 
   const p1Score = session.player1_score
   const p2Score = session.player2_score
-  const winnerEmail =
+  const winnerName =
     p1Score > p2Score
-      ? session.player1_email
+      ? (session.player1_username || session.player1_email?.split('@')[0])
       : p2Score > p1Score
-      ? session.player2_email
+      ? (session.player2_username || session.player2_email?.split('@')[0])
       : null
 
   const isTie = p1Score === p2Score
@@ -150,7 +150,7 @@ export default function ResultsPage() {
           ) : (
             <>
               <h1 className="pixel-font text-sm md:text-base text-[#FF1493] mb-3 leading-relaxed">
-                🏆 {winnerEmail?.split('@')[0]} Wins! 👑
+                🏆 {winnerName} Wins! 👑
               </h1>
               <p className="font-bold text-xl text-[#C084FC]">
                 Better luck next time~ ♡ (◡‿◡✿)

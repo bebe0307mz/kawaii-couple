@@ -25,6 +25,11 @@ export default function DashboardPage() {
         router.replace('/auth')
         return
       }
+      // Redirect to setup if no username yet
+      if (!user.user_metadata?.username) {
+        router.replace('/setup')
+        return
+      }
       setUser(user)
       setLoading(false)
     }
@@ -42,6 +47,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           player1_id: user.id,
           player1_email: user.email,
+          player1_username: user.user_metadata?.username || user.email?.split('@')[0],
         }),
       })
       const data = await res.json()
@@ -95,6 +101,7 @@ export default function DashboardPage() {
         body: JSON.stringify({
           player2_id: user.id,
           player2_email: user.email,
+          player2_username: user.user_metadata?.username || user.email?.split('@')[0],
           status: 'playing',
         }),
       })
@@ -130,7 +137,7 @@ export default function DashboardPage() {
       <nav className="relative z-10 flex items-center justify-between px-4 py-4 md:px-8">
         <Link href="/" className="pixel-font text-sm text-[#FF69B4]">Kawaii Couple</Link>
         <div className="flex items-center gap-3">
-          <span className="text-xs font-bold text-gray-500 hidden sm:block">{user?.email}</span>
+          <span className="text-xs font-bold text-[#FF69B4] hidden sm:block pixel-font">{user?.user_metadata?.username}</span>
           <button onClick={handleSignOut} className="btn-pixel btn-pixel-white text-xs py-2 px-3">
             Logout
           </button>
@@ -141,7 +148,7 @@ export default function DashboardPage() {
         <div className="text-center mb-8">
           <div className="text-4xl mb-2">🌸</div>
           <h1 className="pixel-font text-sm md:text-base text-[#FF1493] mb-2">
-            Hello, {user?.email?.split('@')[0]}~ ♡
+            Hello, {user?.user_metadata?.username}~ ♡
           </h1>
           <p className="font-semibold text-[#C084FC]">(◕‿◕)✿ Ready to play?</p>
         </div>

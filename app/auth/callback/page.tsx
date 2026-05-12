@@ -14,17 +14,19 @@ function CallbackHandler() {
 
       if (code) {
         // PKCE flow - exchange code for session
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
           router.replace('/auth?error=login_failed')
         } else {
-          router.replace('/dashboard')
+          const hasUsername = data.user?.user_metadata?.username
+          router.replace(hasUsername ? '/dashboard' : '/setup')
         }
       } else {
         // Implicit flow - session already set via hash, just check
         const { data: { session } } = await supabase.auth.getSession()
         if (session) {
-          router.replace('/dashboard')
+          const hasUsername = session.user?.user_metadata?.username
+          router.replace(hasUsername ? '/dashboard' : '/setup')
         } else {
           router.replace('/auth')
         }

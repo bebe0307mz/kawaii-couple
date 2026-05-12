@@ -165,9 +165,9 @@ export default function LobbyPage() {
                   {session?.player1_id ? '💝' : '?'}
                 </div>
                 <p className="pixel-font text-xs text-[#FF1493]">Player 1</p>
-                {session?.player1_email && (
-                  <p className="text-xs font-bold text-gray-500 mt-1 max-w-[100px] truncate">
-                    {session.player1_email.split('@')[0]}
+                {session?.player1_id && (
+                  <p className="pixel-font text-xs text-[#FF69B4] mt-1">
+                    {session.player1_username || session.player1_email?.split('@')[0]}
                   </p>
                 )}
                 {session?.player1_id && (
@@ -184,9 +184,9 @@ export default function LobbyPage() {
                   )}
                 </div>
                 <p className="pixel-font text-xs text-[#FF1493]">Player 2</p>
-                {session?.player2_email && (
-                  <p className="text-xs font-bold text-gray-500 mt-1 max-w-[100px] truncate">
-                    {session.player2_email.split('@')[0]}
+                {session?.player2_id && (
+                  <p className="pixel-font text-xs text-[#C084FC] mt-1">
+                    {session.player2_username || session.player2_email?.split('@')[0]}
                   </p>
                 )}
                 {session?.player2_id ? (

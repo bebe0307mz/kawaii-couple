@@ -5,7 +5,7 @@ import { generateGameCode } from '@/lib/gameUtils'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { player1_id, player1_email } = body
+    const { player1_id, player1_email, player1_username } = body
 
     if (!player1_id || !player1_email) {
       return NextResponse.json({ error: 'Missing player info' }, { status: 400 })
@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
         code,
         player1_id,
         player1_email,
+        player1_username,
         status: 'waiting',
       })
       .select()

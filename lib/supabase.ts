@@ -20,8 +20,10 @@ export type GameSession = {
   code: string
   player1_id: string | null
   player1_email: string | null
+  player1_username: string | null
   player2_id: string | null
   player2_email: string | null
+  player2_username: string | null
   status: 'waiting' | 'playing' | 'finished'
   current_game: number
   player1_score: number

@@ -41,7 +41,7 @@ export default function GamePage() {
   const [myGameScore, setMyGameScore] = useState<number | null>(null)
   const [opponentGameScore, setOpponentGameScore] = useState<number | null>(null)
   const [gameScores, setGameScores] = useState<GameScore[]>([])
-  const [opponentEmail, setOpponentEmail] = useState('')
+  const [opponentName, setOpponentName] = useState('')
   const [selectedGames, setSelectedGames] = useState<number[]>([0, 1, 2, 3, 4])
   const waitingRef = useRef(false)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
@@ -67,10 +67,10 @@ export default function GamePage() {
 
       if (sess.player1_id === user.id) {
         setPlayerRole('player1')
-        setOpponentEmail(sess.player2_email || '')
+        setOpponentName(sess.player2_username || sess.player2_email?.split('@')[0] || 'Bae')
       } else {
         setPlayerRole('player2')
-        setOpponentEmail(sess.player1_email || '')
+        setOpponentName(sess.player1_username || sess.player1_email?.split('@')[0] || 'Bae')
       }
 
       setMyScore(sess.player1_id === user.id ? sess.player1_score : sess.player2_score)
@@ -264,8 +264,10 @@ export default function GamePage() {
     )
   }
 
-  const myLabel = playerRole === 'player1' ? session?.player1_email?.split('@')[0] : session?.player2_email?.split('@')[0]
-  const oppLabel = opponentEmail.split('@')[0]
+  const myLabel = playerRole === 'player1'
+    ? (session?.player1_username || session?.player1_email?.split('@')[0] || 'You')
+    : (session?.player2_username || session?.player2_email?.split('@')[0] || 'You')
+  const oppLabel = opponentName
 
   const roundWinnerLabel = (() => {
     if (myGameScore === null || opponentGameScore === null) return null
