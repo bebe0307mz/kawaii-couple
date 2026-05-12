@@ -19,6 +19,21 @@ import TypeRace from '@/components/games/TypeRace'
 import RockPaperSakura from '@/components/games/RockPaperSakura'
 import StarCatcher from '@/components/games/StarCatcher'
 import NumberRush from '@/components/games/NumberRush'
+import BalloonPop from '@/components/games/BalloonPop'
+import KaomojiQuiz from '@/components/games/KaomojiQuiz'
+import TimeStop from '@/components/games/TimeStop'
+import HigherLower from '@/components/games/HigherLower'
+import AlphabetDash from '@/components/games/AlphabetDash'
+import CountEmoji from '@/components/games/CountEmoji'
+import ClickZone from '@/components/games/ClickZone'
+import DiceDuel from '@/components/games/DiceDuel'
+import AnimeTrivia from '@/components/games/AnimeTrivia'
+import ColorFlash from '@/components/games/ColorFlash'
+import SpeedSort from '@/components/games/SpeedSort'
+import WordChain from '@/components/games/WordChain'
+import RhythmTap from '@/components/games/RhythmTap'
+import NekoCatch from '@/components/games/NekoCatch'
+import WhackMole from '@/components/games/WhackMole'
 import type { User } from '@supabase/supabase-js'
 import type { GameSession, GameScore } from '@/lib/supabase'
 
@@ -314,6 +329,36 @@ export default function GamePage() {
         return <StarCatcher onComplete={handleGameComplete} playerEmail={email} />
       case 14:
         return <NumberRush onComplete={handleGameComplete} playerEmail={email} />
+      case 15:
+        return <BalloonPop onComplete={handleGameComplete} playerEmail={email} />
+      case 16:
+        return <KaomojiQuiz onComplete={handleGameComplete} playerEmail={email} />
+      case 17:
+        return <TimeStop onComplete={handleGameComplete} playerEmail={email} />
+      case 18:
+        return <HigherLower onComplete={handleGameComplete} playerEmail={email} />
+      case 19:
+        return <AlphabetDash onComplete={handleGameComplete} playerEmail={email} />
+      case 20:
+        return <CountEmoji onComplete={handleGameComplete} playerEmail={email} />
+      case 21:
+        return <ClickZone onComplete={handleGameComplete} playerEmail={email} />
+      case 22:
+        return <DiceDuel onComplete={handleGameComplete} playerEmail={email} />
+      case 23:
+        return <AnimeTrivia onComplete={handleGameComplete} playerEmail={email} />
+      case 24:
+        return <ColorFlash onComplete={handleGameComplete} playerEmail={email} />
+      case 25:
+        return <SpeedSort onComplete={handleGameComplete} playerEmail={email} />
+      case 26:
+        return <WordChain onComplete={handleGameComplete} playerEmail={email} />
+      case 27:
+        return <RhythmTap onComplete={handleGameComplete} playerEmail={email} />
+      case 28:
+        return <NekoCatch onComplete={handleGameComplete} playerEmail={email} />
+      case 29:
+        return <WhackMole onComplete={handleGameComplete} playerEmail={email} />
       default:
         return <HeartTap onComplete={handleGameComplete} playerEmail={email} />
     }

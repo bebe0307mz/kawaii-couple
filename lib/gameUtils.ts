@@ -29,14 +29,34 @@ export const GAME_NAMES = [
   'Rock Paper Sakura',
   'Star Catcher',
   'Number Rush',
+  // Games 15-29 (indices 15-29)
+  'Balloon Pop',
+  'Kaomoji Quiz',
+  'Time Stop',
+  'Higher Lower',
+  'Alphabet Dash',
+  'Count the Emoji',
+  'Click Zone',
+  'Dice Duel',
+  'Anime Trivia',
+  'Color Flash',
+  'Speed Sort',
+  'Word Chain',
+  'Rhythm Tap',
+  'Neko Catch',
+  'Whack a Mole',
 ]
 
-export const GAME_EMOJIS = ['💝', '🃏', '⚡', '🔤', '🧠', '🎯', '🔢', '🎨', '🌸', '💬', '🎵', '⌨️', '✂️', '🌟', '🔢']
+export const GAME_EMOJIS = [
+  '💝', '🃏', '⚡', '🔤', '🧠', '🎯', '🔢', '🎨', '🌸', '💬', '🎵', '⌨️', '✂️', '🌟', '🔢',
+  // Emojis 15-29
+  '🎈', '😊', '⏱️', '📈', '⌨️', '🔢', '🎯', '🎲', '🏆', '🌈', '🃏', '🔤', '🎵', '🐱', '🔨',
+]
 
 export function selectGamesForSession(code: string): number[] {
   // Seeded from code so both players get same 5 games
   let seed = code.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
-  const games = Array.from({ length: 15 }, (_, i) => i)
+  const games = Array.from({ length: GAME_NAMES.length }, (_, i) => i)
   for (let i = games.length - 1; i > 0; i--) {
     seed = (seed * 1664525 + 1013904223) & 0xffffffff
     const j = Math.abs(seed) % (i + 1)
