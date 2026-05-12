@@ -288,9 +288,11 @@ export default function GamePage() {
     setGameScores(newGameScores)
     gameScoresRef.current = newGameScores
 
-    // Update totals
-    let newP1Total = sess.player1_score
-    let newP2Total = sess.player2_score
+    // Update totals - use live refs, not stale session values from page load
+    const myCurrentTotal = myScoreRef.current
+    const oppCurrentTotal = opponentScoreRef.current
+    let newP1Total = role === 'player1' ? myCurrentTotal : oppCurrentTotal
+    let newP2Total = role === 'player2' ? myCurrentTotal : oppCurrentTotal
     if (roundWinner === 'player1') newP1Total += 1
     else if (roundWinner === 'player2') newP2Total += 1
 
