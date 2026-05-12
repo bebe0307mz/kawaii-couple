@@ -59,7 +59,13 @@ export default function GamePage() {
   const [opponentName, setOpponentName] = useState('')
   const [selectedGames, setSelectedGames] = useState<number[]>([0, 1, 2, 3, 4])
   const waitingRef = useRef(false)
+  const advancingRef = useRef(false)
+  const currentGameRef = useRef(0)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+
+  useEffect(() => {
+    currentGameRef.current = currentGame
+  }, [currentGame])
 
   useEffect(() => {
     async function init() {
@@ -112,10 +118,11 @@ export default function GamePage() {
       })
       .on('broadcast', { event: 'game_ready' }, (payload) => {
         const p = payload.payload as { player_email: string; game: number }
-        if (p.player_email !== user.email) {
-          if (waitingRef.current) {
-            advanceGame()
-          }
+        if (p.player_email === user.email) return
+        if (p.game !== currentGameRef.current) return
+        if (advancingRef.current) return
+        if (waitingRef.current) {
+          advanceGame()
         }
       })
       .subscribe()
@@ -193,6 +200,8 @@ export default function GamePage() {
 
   async function advanceGame() {
     if (!user || !playerRole || !session) return
+    if (advancingRef.current) return
+    advancingRef.current = true
     waitingRef.current = false
 
     // Compute round winner
@@ -250,6 +259,7 @@ export default function GamePage() {
     setOpponentGameScore(null)
     setCurrentGame(nextGame)
     setPhase('countdown')
+    advancingRef.current = false
   }
 
   async function handleNextGame() {
@@ -324,7 +334,7 @@ export default function GamePage() {
       case 11:
         return <TypeRace onComplete={handleGameComplete} playerEmail={email} />
       case 12:
-        return <RockPaperSakura onComplete={handleGameComplete} playerEmail={email} sessionCode={code} />
+        return <RockPaperSakura onComplete={handleGameComplete} playerEmail={email} sessionCode={code} opponentName={oppLabel} />
       case 13:
         return <StarCatcher onComplete={handleGameComplete} playerEmail={email} />
       case 14:
@@ -398,8 +408,7 @@ export default function GamePage() {
           </div>
 
           <div className="text-center">
-            <div className="pixel-font text-xs text-[#C084FC]">BABE</div>
-            <div className="font-bold text-xs text-gray-500 truncate max-w-[80px]">{oppLabel}</div>
+            <div className="pixel-font text-xs text-[#C084FC] truncate max-w-[80px]">{(oppLabel || 'BABE').toString().toUpperCase()}</div>
             <div className="pixel-font text-xl text-[#C084FC]">{opponentScore}</div>
           </div>
         </div>
@@ -436,7 +445,7 @@ export default function GamePage() {
               </div>
               <div className="flex items-center text-2xl">vs</div>
               <div className="card-pixel-lavender p-4 text-center">
-                <div className="font-bold text-xs text-gray-500 mb-1">Babe</div>
+                <div className="font-bold text-xs text-gray-500 mb-1 truncate max-w-[100px]">{oppLabel || 'Babe'}</div>
                 <div className="pixel-font text-xl text-[#C084FC]">{opponentGameScore ?? '...'}</div>
               </div>
             </div>
@@ -448,14 +457,14 @@ export default function GamePage() {
                 ) : roundWinnerLabel === 'you' ? (
                   <p className="pixel-font text-xs text-[#FF1493]">You win this round! ♡</p>
                 ) : (
-                  <p className="pixel-font text-xs text-[#C084FC]">Babe wins this round~ (◕_◕)</p>
+                  <p className="pixel-font text-xs text-[#C084FC]">{oppLabel || 'Babe'} wins this round~ (◕_◕)</p>
                 )}
               </div>
             )}
 
             {opponentGameScore === null ? (
               <p className="font-semibold text-gray-500">
-                Waiting for babe<span className="loading-dots"></span> ♡
+                Waiting for {oppLabel || 'babe'}<span className="loading-dots"></span> ♡
               </p>
             ) : (
               <button onClick={handleNextGame} className="btn-pixel">

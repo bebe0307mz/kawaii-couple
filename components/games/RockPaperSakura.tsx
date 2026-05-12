@@ -7,6 +7,7 @@ interface RockPaperSakuraProps {
   onComplete: (score: number) => void
   playerEmail: string
   sessionCode: string
+  opponentName?: string
 }
 
 type Choice = 'rock' | 'paper' | 'sakura' | null
@@ -31,7 +32,8 @@ function getRoundResult(mine: Choice, opponent: Choice): 'win' | 'lose' | 'tie' 
   return 'lose'
 }
 
-export default function RockPaperSakura({ onComplete, playerEmail, sessionCode }: RockPaperSakuraProps) {
+export default function RockPaperSakura({ onComplete, playerEmail, sessionCode, opponentName }: RockPaperSakuraProps) {
+  const oppLabel = opponentName || 'Babe'
   const [round, setRound] = useState(1)
   const [score, setScore] = useState(0)
   const [myChoice, setMyChoice] = useState<Choice>(null)
@@ -190,7 +192,7 @@ export default function RockPaperSakura({ onComplete, playerEmail, sessionCode }
                   </div>
                   <div className="text-2xl font-bold text-gray-400 flex items-center">vs</div>
                   <div className="text-center">
-                    <div className="text-xs font-semibold text-gray-500 mb-1">Babe</div>
+                    <div className="text-xs font-semibold text-gray-500 mb-1 truncate max-w-[80px]">{oppLabel}</div>
                     <div className="text-4xl">{CHOICES.find(c => c.id === opponentChoice)?.emoji || '?'}</div>
                   </div>
                 </div>
@@ -199,7 +201,7 @@ export default function RockPaperSakura({ onComplete, playerEmail, sessionCode }
                   roundResult === 'lose' ? 'text-red-500' : 'text-gray-500'
                 }`}>
                   {roundResult === 'win' ? 'You win! ♡' :
-                   roundResult === 'lose' ? 'Babe wins~' : 'Tie! ★'}
+                   roundResult === 'lose' ? `${oppLabel} wins~` : 'Tie! ★'}
                 </div>
               </div>
             )}

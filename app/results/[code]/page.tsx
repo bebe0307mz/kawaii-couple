@@ -109,6 +109,9 @@ export default function ResultsPage() {
 
   const myEmail = playerRole === 'player1' ? session.player1_email : session.player2_email
   const opponentEmail = playerRole === 'player1' ? session.player2_email : session.player1_email
+  const opponentName = (playerRole === 'player1'
+    ? (session.player2_username || session.player2_email?.split('@')[0])
+    : (session.player1_username || session.player1_email?.split('@')[0])) || 'Babe'
   const myTotal = playerRole === 'player1' ? p1Score : p2Score
   const oppTotal = playerRole === 'player1' ? p2Score : p1Score
 
@@ -170,7 +173,7 @@ export default function ResultsPage() {
             </div>
             <div className="flex items-center text-3xl">vs</div>
             <div className="text-center">
-              <div className="font-bold text-sm text-gray-500 mb-1">Babe</div>
+              <div className="font-bold text-sm text-gray-500 mb-1 truncate max-w-[120px]">{opponentName}</div>
               <div className="pixel-font text-3xl text-[#C084FC]">{oppTotal}</div>
               <div className="text-xs font-bold text-gray-400">games won</div>
             </div>
@@ -198,7 +201,7 @@ export default function ResultsPage() {
                     <div className="font-bold text-sm text-gray-700">{name}</div>
                     {gs ? (
                       <div className="text-xs text-gray-500 font-semibold">
-                        You: {myGS ?? 0} | Babe: {oppGS ?? 0}
+                        You: {myGS ?? 0} | {opponentName}: {oppGS ?? 0}
                       </div>
                     ) : (
                       <div className="text-xs text-gray-400">Not played</div>
