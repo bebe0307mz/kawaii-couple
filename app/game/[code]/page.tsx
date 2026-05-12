@@ -353,7 +353,7 @@ export default function GamePage() {
           </div>
 
           <div className="text-center">
-            <div className="pixel-font text-xs text-[#C084FC]">BAE</div>
+            <div className="pixel-font text-xs text-[#C084FC]">BABE</div>
             <div className="font-bold text-xs text-gray-500 truncate max-w-[80px]">{oppLabel}</div>
             <div className="pixel-font text-xl text-[#C084FC]">{opponentScore}</div>
           </div>
