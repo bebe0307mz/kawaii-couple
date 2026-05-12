@@ -56,16 +56,34 @@ export default function GamePage() {
   const [myGameScore, setMyGameScore] = useState<number | null>(null)
   const [opponentGameScore, setOpponentGameScore] = useState<number | null>(null)
   const [gameScores, setGameScores] = useState<GameScore[]>([])
-  const [opponentName, setOpponentName] = useState('')
+  const [opponentName, setOpponentName] = useState('Player')
+  const [myName, setMyName] = useState('You')
   const [selectedGames, setSelectedGames] = useState<number[]>([0, 1, 2, 3, 4])
+
+  // Refs for stale-closure-safe access in realtime handlers and advanceGameWithRefs
+  const myGameScoreRef = useRef<number | null>(null)
+  const opponentGameScoreRef = useRef<number | null>(null)
+  const currentGameRef = useRef(0)
+  const gameScoresRef = useRef<GameScore[]>([])
+  const sessionRef = useRef<GameSession | null>(null)
+  const playerRoleRef = useRef<'player1' | 'player2' | null>(null)
+  const myScoreRef = useRef(0)
+  const opponentScoreRef = useRef(0)
+  const userRef = useRef<User | null>(null)
   const waitingRef = useRef(false)
   const advancingRef = useRef(false)
-  const currentGameRef = useRef(0)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
-  useEffect(() => {
-    currentGameRef.current = currentGame
-  }, [currentGame])
+  // Sync refs whenever state changes
+  useEffect(() => { myGameScoreRef.current = myGameScore }, [myGameScore])
+  useEffect(() => { opponentGameScoreRef.current = opponentGameScore }, [opponentGameScore])
+  useEffect(() => { currentGameRef.current = currentGame }, [currentGame])
+  useEffect(() => { gameScoresRef.current = gameScores }, [gameScores])
+  useEffect(() => { sessionRef.current = session }, [session])
+  useEffect(() => { playerRoleRef.current = playerRole }, [playerRole])
+  useEffect(() => { myScoreRef.current = myScore }, [myScore])
+  useEffect(() => { opponentScoreRef.current = opponentScore }, [opponentScore])
+  useEffect(() => { userRef.current = user }, [user])
 
   useEffect(() => {
     async function init() {
@@ -75,6 +93,10 @@ export default function GamePage() {
         return
       }
       setUser(user)
+      userRef.current = user
+
+      const derivedMyName = user.user_metadata?.username || user.email?.split('@')[0] || 'You'
+      setMyName(derivedMyName)
 
       const res = await fetch(`/api/sessions/${code}`)
       const data = await res.json()
@@ -85,19 +107,33 @@ export default function GamePage() {
 
       const sess: GameSession = data.session
       setSession(sess)
+      sessionRef.current = sess
 
       if (sess.player1_id === user.id) {
         setPlayerRole('player1')
-        setOpponentName(sess.player2_username || sess.player2_email?.split('@')[0] || 'Babe')
+        playerRoleRef.current = 'player1'
+        setOpponentName(sess.player2_username || sess.player2_email?.split('@')[0] || 'Player')
       } else {
         setPlayerRole('player2')
-        setOpponentName(sess.player1_username || sess.player1_email?.split('@')[0] || 'Babe')
+        playerRoleRef.current = 'player2'
+        setOpponentName(sess.player1_username || sess.player1_email?.split('@')[0] || 'Player')
       }
 
-      setMyScore(sess.player1_id === user.id ? sess.player1_score : sess.player2_score)
-      setOpponentScore(sess.player1_id === user.id ? sess.player2_score : sess.player1_score)
-      setCurrentGame(sess.current_game || 0)
-      setGameScores(sess.game_scores || [])
+      const initialMyScore = sess.player1_id === user.id ? sess.player1_score : sess.player2_score
+      const initialOppScore = sess.player1_id === user.id ? sess.player2_score : sess.player1_score
+      setMyScore(initialMyScore)
+      setOpponentScore(initialOppScore)
+      myScoreRef.current = initialMyScore
+      opponentScoreRef.current = initialOppScore
+
+      const initialGame = sess.current_game || 0
+      setCurrentGame(initialGame)
+      currentGameRef.current = initialGame
+
+      const initialScores = sess.game_scores || []
+      setGameScores(initialScores)
+      gameScoresRef.current = initialScores
+
       setSelectedGames(selectGamesForSession(code))
       setLoading(false)
     }
@@ -112,20 +148,37 @@ export default function GamePage() {
       .channel(`game:${code}`)
       .on('broadcast', { event: 'game_score' }, (payload) => {
         const p = payload.payload as { player_email: string; game: number; score: number }
-        if (p.player_email !== user.email) {
+        if (p.player_email !== userRef.current?.email) {
           setOpponentGameScore(p.score)
+          opponentGameScoreRef.current = p.score
         }
       })
       .on('broadcast', { event: 'game_ready' }, (payload) => {
         const p = payload.payload as { player_email: string; game: number }
-        if (p.player_email === user.email) return
+        if (p.player_email === userRef.current?.email) return
         if (p.game !== currentGameRef.current) return
         if (advancingRef.current) return
         if (waitingRef.current) {
-          advanceGame()
+          advanceGameWithRefs()
         }
       })
-      .subscribe()
+      .on('broadcast', { event: 'player_info' }, (payload) => {
+        const p = payload.payload as { player_email: string; username: string }
+        if (p.player_email !== userRef.current?.email) {
+          setOpponentName(p.username)
+        }
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          const u = userRef.current
+          const name = u?.user_metadata?.username || u?.email?.split('@')[0] || 'Player'
+          await channel.send({
+            type: 'broadcast',
+            event: 'player_info',
+            payload: { player_email: u?.email, username: name },
+          })
+        }
+      })
 
     channelRef.current = channel
 
@@ -146,14 +199,15 @@ export default function GamePage() {
         if (!data.session) return
         const sess: GameSession = data.session
         // Check if session advanced (player1 already wrote the next game state)
-        if (sess.current_game !== undefined && sess.current_game > currentGame) {
+        if (sess.current_game !== undefined && sess.current_game > currentGameRef.current) {
           // Session already moved on - the scores must have been submitted
           // Read scores from game_scores array
           const scores: GameScore[] = sess.game_scores || []
-          const roundScore = scores.find((s) => s.game === currentGame)
+          const roundScore = scores.find((s) => s.game === currentGameRef.current)
           if (roundScore) {
-            const oppScore = playerRole === 'player1' ? roundScore.player2 : roundScore.player1
+            const oppScore = playerRoleRef.current === 'player1' ? roundScore.player2 : roundScore.player1
             setOpponentGameScore(oppScore)
+            opponentGameScoreRef.current = oppScore
           }
         }
       } catch {
@@ -161,7 +215,7 @@ export default function GamePage() {
       }
     }, 2000)
     return () => clearInterval(poll)
-  }, [phase, opponentGameScore, code, currentGame, playerRole])
+  }, [phase, opponentGameScore, code])
 
   // Countdown logic
   useEffect(() => {
@@ -181,8 +235,13 @@ export default function GamePage() {
   }, [phase, currentGame])
 
   const handleGameComplete = useCallback(async (score: number) => {
-    if (!user || !playerRole || !session) return
+    const role = playerRoleRef.current
+    const sess = sessionRef.current
+    const u = userRef.current
+    const cg = currentGameRef.current
+    if (!u || !role || !sess) return
     setMyGameScore(score)
+    myGameScoreRef.current = score
     setPhase('results')
 
     // Broadcast score via the persistent channel ref
@@ -190,45 +249,57 @@ export default function GamePage() {
       await channelRef.current.send({
         type: 'broadcast',
         event: 'game_score',
-        payload: { player_email: user.email, game: currentGame, score },
+        payload: { player_email: u.email, game: cg, score },
       })
     }
 
     waitingRef.current = true
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, playerRole, session, currentGame])
+  }, [])
 
-  async function advanceGame() {
-    if (!user || !playerRole || !session) return
+  function advanceGameWithRefs() {
     if (advancingRef.current) return
     advancingRef.current = true
     waitingRef.current = false
 
+    const role = playerRoleRef.current
+    const sess = sessionRef.current
+    const u = userRef.current
+    const myS = myGameScoreRef.current ?? 0
+    const oppS = opponentGameScoreRef.current ?? 0
+    const cg = currentGameRef.current
+    const scores = gameScoresRef.current
+
+    if (!u || !role || !sess) {
+      advancingRef.current = false
+      return
+    }
+
     // Compute round winner
-    const p1Score = playerRole === 'player1' ? myGameScore ?? 0 : opponentGameScore ?? 0
-    const p2Score = playerRole === 'player2' ? myGameScore ?? 0 : opponentGameScore ?? 0
+    const p1Score = role === 'player1' ? myS : oppS
+    const p2Score = role === 'player2' ? myS : oppS
     const roundWinner = calcWinner(p1Score, p2Score)
 
     const newGameScore: GameScore = {
-      game: currentGame,
+      game: cg,
       player1: p1Score,
       player2: p2Score,
       winner: roundWinner,
     }
-    const newGameScores = [...gameScores, newGameScore]
+    const newGameScores = [...scores, newGameScore]
     setGameScores(newGameScores)
+    gameScoresRef.current = newGameScores
 
     // Update totals
-    let newP1Total = session.player1_score
-    let newP2Total = session.player2_score
+    let newP1Total = sess.player1_score
+    let newP2Total = sess.player2_score
     if (roundWinner === 'player1') newP1Total += 1
     else if (roundWinner === 'player2') newP2Total += 1
 
-    const nextGame = currentGame + 1
+    const nextGame = cg + 1
 
     // Update DB (player1 does this to avoid race condition)
-    if (playerRole === 'player1') {
-      await fetch(`/api/sessions/${code}`, {
+    if (role === 'player1') {
+      fetch(`/api/sessions/${code}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -247,35 +318,42 @@ export default function GamePage() {
     }
 
     // Update local state
-    if (playerRole === 'player1') {
-      setMyScore(newP1Total)
-      setOpponentScore(newP2Total)
-    } else {
-      setMyScore(newP2Total)
-      setOpponentScore(newP1Total)
-    }
+    const newMyScore = role === 'player1' ? newP1Total : newP2Total
+    const newOppScore = role === 'player1' ? newP2Total : newP1Total
+    setMyScore(newMyScore)
+    setOpponentScore(newOppScore)
+    myScoreRef.current = newMyScore
+    opponentScoreRef.current = newOppScore
 
     setMyGameScore(null)
+    myGameScoreRef.current = null
     setOpponentGameScore(null)
-    setCurrentGame(nextGame)
+    opponentGameScoreRef.current = null
+
+    const newCurrentGame = nextGame
+    setCurrentGame(newCurrentGame)
+    currentGameRef.current = newCurrentGame
+
     setPhase('countdown')
-    advancingRef.current = false
+
+    setTimeout(() => { advancingRef.current = false }, 500)
   }
 
   async function handleNextGame() {
-    if (!user) return
+    const u = userRef.current
+    if (!u) return
     // Broadcast ready via persistent channel
     if (channelRef.current) {
       await channelRef.current.send({
         type: 'broadcast',
         event: 'game_ready',
-        payload: { player_email: user.email, game: currentGame },
+        payload: { player_email: u.email, game: currentGameRef.current },
       })
     }
 
     // If we already have opponent score, advance now
-    if (opponentGameScore !== null) {
-      await advanceGame()
+    if (opponentGameScoreRef.current !== null) {
+      advanceGameWithRefs()
     } else {
       waitingRef.current = true
     }
@@ -289,9 +367,6 @@ export default function GamePage() {
     )
   }
 
-  const myLabel = playerRole === 'player1'
-    ? (session?.player1_username || session?.player1_email?.split('@')[0] || 'You')
-    : (session?.player2_username || session?.player2_email?.split('@')[0] || 'You')
   const oppLabel = opponentName
 
   const roundWinnerLabel = (() => {
@@ -393,7 +468,7 @@ export default function GamePage() {
         <div className="flex items-center justify-between mb-2">
           <div className="text-center">
             <div className="pixel-font text-xs text-[#FF1493]">YOU</div>
-            <div className="font-bold text-xs text-gray-500 truncate max-w-[80px]">{myLabel}</div>
+            <div className="font-bold text-xs text-gray-500 truncate max-w-[80px]">{myName}</div>
             <div className="pixel-font text-xl text-[#FF69B4]">{myScore}</div>
           </div>
 
@@ -408,7 +483,7 @@ export default function GamePage() {
           </div>
 
           <div className="text-center">
-            <div className="pixel-font text-xs text-[#C084FC] truncate max-w-[80px]">{(oppLabel || 'BABE').toString().toUpperCase()}</div>
+            <div className="pixel-font text-xs text-[#C084FC] truncate max-w-[80px]">{(oppLabel || 'PLAYER').toString().toUpperCase()}</div>
             <div className="pixel-font text-xl text-[#C084FC]">{opponentScore}</div>
           </div>
         </div>
@@ -440,12 +515,12 @@ export default function GamePage() {
 
             <div className="flex gap-6 justify-center">
               <div className="card-pixel p-4 text-center">
-                <div className="font-bold text-xs text-gray-500 mb-1">You</div>
+                <div className="font-bold text-xs text-gray-500 mb-1">{myName}</div>
                 <div className="pixel-font text-xl text-[#FF69B4]">{myGameScore ?? '...'}</div>
               </div>
               <div className="flex items-center text-2xl">vs</div>
               <div className="card-pixel-lavender p-4 text-center">
-                <div className="font-bold text-xs text-gray-500 mb-1 truncate max-w-[100px]">{oppLabel || 'Babe'}</div>
+                <div className="font-bold text-xs text-gray-500 mb-1 truncate max-w-[100px]">{oppLabel || 'Player'}</div>
                 <div className="pixel-font text-xl text-[#C084FC]">{opponentGameScore ?? '...'}</div>
               </div>
             </div>
@@ -457,14 +532,14 @@ export default function GamePage() {
                 ) : roundWinnerLabel === 'you' ? (
                   <p className="pixel-font text-xs text-[#FF1493]">You win this round! ♡</p>
                 ) : (
-                  <p className="pixel-font text-xs text-[#C084FC]">{oppLabel || 'Babe'} wins this round~ (◕_◕)</p>
+                  <p className="pixel-font text-xs text-[#C084FC]">{oppLabel || 'Player'} wins this round~ (◕_◕)</p>
                 )}
               </div>
             )}
 
             {opponentGameScore === null ? (
               <p className="font-semibold text-gray-500">
-                Waiting for {oppLabel || 'babe'}<span className="loading-dots"></span> ♡
+                Waiting for {oppLabel || 'Player'}<span className="loading-dots"></span> ♡
               </p>
             ) : (
               <button onClick={handleNextGame} className="btn-pixel">
