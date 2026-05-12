@@ -141,7 +141,7 @@ export default function WordScramble({ onComplete, playerEmail, sessionCode }: W
           <>
             {opponentAnswered && (
               <div className="card-pixel p-2 px-4 bg-yellow-50 text-center">
-                <p className="text-xs font-bold text-yellow-600">Your bae answered! ⚡</p>
+                <p className="text-xs font-bold text-yellow-600">Your babe answered! ⚡</p>
               </div>
             )}
 

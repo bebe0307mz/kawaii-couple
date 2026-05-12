@@ -166,7 +166,7 @@ export default function DashboardPage() {
           {!inviteCode ? (
             <div className="text-center">
               <p className="font-semibold text-gray-600 mb-4">
-                Generate an invite code and share it with your bae~ ♡
+                Generate an invite code and share it with your babe~ ♡
               </p>
               <button
                 onClick={handleCreateSession}
@@ -210,7 +210,7 @@ export default function DashboardPage() {
         <div className="card-pixel-lavender p-6">
           <h2 className="pixel-font text-xs text-[#C084FC] mb-4">Join a Game ♡</h2>
           <p className="font-semibold text-gray-600 mb-4">
-            Got a code from your bae? Enter it here~ (◡‿◡✿)
+            Got a code from your babe? Enter it here~ (◡‿◡✿)
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <input

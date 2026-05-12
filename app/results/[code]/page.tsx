@@ -170,7 +170,7 @@ export default function ResultsPage() {
             </div>
             <div className="flex items-center text-3xl">vs</div>
             <div className="text-center">
-              <div className="font-bold text-sm text-gray-500 mb-1">Bae</div>
+              <div className="font-bold text-sm text-gray-500 mb-1">Babe</div>
               <div className="pixel-font text-3xl text-[#C084FC]">{oppTotal}</div>
               <div className="text-xs font-bold text-gray-400">games won</div>
             </div>
@@ -198,7 +198,7 @@ export default function ResultsPage() {
                     <div className="font-bold text-sm text-gray-700">{name}</div>
                     {gs ? (
                       <div className="text-xs text-gray-500 font-semibold">
-                        You: {myGS ?? 0} | Bae: {oppGS ?? 0}
+                        You: {myGS ?? 0} | Babe: {oppGS ?? 0}
                       </div>
                     ) : (
                       <div className="text-xs text-gray-400">Not played</div>

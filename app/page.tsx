@@ -61,7 +61,7 @@ export default function HomePage() {
         </h1>
 
         <p className="font-nunito text-lg md:text-xl font-800 text-[#FF69B4] mb-2 max-w-md">
-          Play 5 mini games with your bae.
+          Play 5 mini games with your babe.
         </p>
         <p className="text-xl font-bold text-[#C084FC] mb-8">
           Who wins today? (◕‿◠)✿

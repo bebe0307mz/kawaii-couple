@@ -155,7 +155,7 @@ export default function LobbyPage() {
               <div className="pixel-font text-3xl text-[#FF1493] tracking-widest mb-2">
                 {code}
               </div>
-              <p className="text-sm font-semibold text-gray-500">Share this with your bae~ ♡</p>
+              <p className="text-sm font-semibold text-gray-500">Share this with your babe~ ♡</p>
             </div>
 
             {/* Players */}
@@ -200,7 +200,7 @@ export default function LobbyPage() {
             {!bothReady ? (
               <div className="card-pixel p-6 max-w-sm mx-auto">
                 <p className="font-bold text-[#FF69B4] text-lg">
-                  Waiting for your bae<span className="loading-dots"></span> ♡
+                  Waiting for your babe<span className="loading-dots"></span> ♡
                 </p>
                 <p className="text-sm font-semibold text-gray-500 mt-2">
                   (◡‿◡✿) Share the code above!

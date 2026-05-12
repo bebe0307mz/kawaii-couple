@@ -67,10 +67,10 @@ export default function GamePage() {
 
       if (sess.player1_id === user.id) {
         setPlayerRole('player1')
-        setOpponentName(sess.player2_username || sess.player2_email?.split('@')[0] || 'Bae')
+        setOpponentName(sess.player2_username || sess.player2_email?.split('@')[0] || 'Babe')
       } else {
         setPlayerRole('player2')
-        setOpponentName(sess.player1_username || sess.player1_email?.split('@')[0] || 'Bae')
+        setOpponentName(sess.player1_username || sess.player1_email?.split('@')[0] || 'Babe')
       }
 
       setMyScore(sess.player1_id === user.id ? sess.player1_score : sess.player2_score)
@@ -391,7 +391,7 @@ export default function GamePage() {
               </div>
               <div className="flex items-center text-2xl">vs</div>
               <div className="card-pixel-lavender p-4 text-center">
-                <div className="font-bold text-xs text-gray-500 mb-1">Bae</div>
+                <div className="font-bold text-xs text-gray-500 mb-1">Babe</div>
                 <div className="pixel-font text-xl text-[#C084FC]">{opponentGameScore ?? '...'}</div>
               </div>
             </div>
@@ -403,14 +403,14 @@ export default function GamePage() {
                 ) : roundWinnerLabel === 'you' ? (
                   <p className="pixel-font text-xs text-[#FF1493]">You win this round! ♡</p>
                 ) : (
-                  <p className="pixel-font text-xs text-[#C084FC]">Bae wins this round~ (◕_◕)</p>
+                  <p className="pixel-font text-xs text-[#C084FC]">Babe wins this round~ (◕_◕)</p>
                 )}
               </div>
             )}
 
             {opponentGameScore === null ? (
               <p className="font-semibold text-gray-500">
-                Waiting for bae<span className="loading-dots"></span> ♡
+                Waiting for babe<span className="loading-dots"></span> ♡
               </p>
             ) : (
               <button onClick={handleNextGame} className="btn-pixel">

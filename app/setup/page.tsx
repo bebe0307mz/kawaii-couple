@@ -76,7 +76,7 @@ export default function SetupPage() {
           </h1>
           <p className="font-semibold text-[#C084FC] mb-2 text-lg">(◕‿◕)✿</p>
           <p className="text-sm font-semibold text-gray-500 mb-6">
-            3-10 characters - this is how your bae sees you in game~ ♡
+            3-10 characters - this is how your babe sees you in game~ ♡
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">

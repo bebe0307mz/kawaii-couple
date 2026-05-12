@@ -190,7 +190,7 @@ export default function RockPaperSakura({ onComplete, playerEmail, sessionCode }
                   </div>
                   <div className="text-2xl font-bold text-gray-400 flex items-center">vs</div>
                   <div className="text-center">
-                    <div className="text-xs font-semibold text-gray-500 mb-1">Bae</div>
+                    <div className="text-xs font-semibold text-gray-500 mb-1">Babe</div>
                     <div className="text-4xl">{CHOICES.find(c => c.id === opponentChoice)?.emoji || '?'}</div>
                   </div>
                 </div>
@@ -199,7 +199,7 @@ export default function RockPaperSakura({ onComplete, playerEmail, sessionCode }
                   roundResult === 'lose' ? 'text-red-500' : 'text-gray-500'
                 }`}>
                   {roundResult === 'win' ? 'You win! ♡' :
-                   roundResult === 'lose' ? 'Bae wins~' : 'Tie! ★'}
+                   roundResult === 'lose' ? 'Babe wins~' : 'Tie! ★'}
                 </div>
               </div>
             )}
