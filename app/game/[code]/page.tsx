@@ -466,8 +466,7 @@ export default function GamePage() {
       <div className="flex-shrink-0 bg-white border-b-3 border-[#FF69B4] px-4 py-3" style={{ borderBottomWidth: 3, borderColor: '#FF69B4' }}>
         <div className="flex items-center justify-between mb-2">
           <div className="text-center">
-            <div className="pixel-font text-xs text-[#FF1493]">YOU</div>
-            <div className="font-bold text-xs text-gray-500 truncate max-w-[80px]">{myName}</div>
+            <div className="pixel-font text-xs text-[#FF1493] truncate max-w-[80px]">{(myName || 'YOU').toString().toUpperCase()}</div>
             <div className="pixel-font text-xl text-[#FF69B4]">{myScore}</div>
           </div>
 
