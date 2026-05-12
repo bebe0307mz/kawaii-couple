@@ -252,8 +252,7 @@ export default function GamePage() {
         payload: { player_email: u.email, game: cg, score },
       })
     }
-
-    waitingRef.current = true
+    // Do NOT set waitingRef.current here - user must click "Next Game" explicitly
   }, [])
 
   function advanceGameWithRefs() {
