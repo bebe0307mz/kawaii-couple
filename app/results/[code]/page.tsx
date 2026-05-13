@@ -250,19 +250,22 @@ export default function ResultsPage() {
           cta="Challenge a friend"
         />
 
-        {/* Ko-fi prompt */}
-        <div className="card-pixel p-6 text-center mt-6">
-          <p className="font-bold text-gray-700 mb-2">Love Kawaii Couple? ♡</p>
-          <p className="text-sm font-semibold text-gray-500 mb-4">
-            Buy us a coffee~ (◡‿◡✿)
+        {/* Ko-fi - emotional, context-aware */}
+        <div className="text-center mt-4">
+          <p className="text-sm font-semibold text-gray-500 mb-3">
+            {isTie
+              ? 'Perfectly matched~ if today made you smile ☕'
+              : isWinner
+              ? 'You crushed it! If today made you smile ☕'
+              : 'You played with heart~ if today made you smile ☕'}
           </p>
           <a
             href="https://ko-fi.com/roastlabai"
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-pixel"
+            className="btn-pixel btn-pixel-lavender"
           >
-            ☕ Support on Ko-fi
+            ☕ Buy us a coffee on Ko-fi
           </a>
         </div>
       </div>

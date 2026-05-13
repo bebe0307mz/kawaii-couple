@@ -217,6 +217,19 @@ export default function LobbyPage() {
                     cta="Send invite"
                   />
                 </div>
+                <div className="mt-4 max-w-sm mx-auto text-center">
+                  <p className="text-xs font-semibold text-gray-400 mb-2">
+                    Love the vibes already? ☕
+                  </p>
+                  <a
+                    href="https://ko-fi.com/roastlabai"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-pixel btn-pixel-white text-xs py-2 px-4"
+                  >
+                    ☕ Buy us a coffee on Ko-fi
+                  </a>
+                </div>
               </>
             ) : (
               <div className="card-pixel p-6 max-w-sm mx-auto">
