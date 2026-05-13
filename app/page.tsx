@@ -41,11 +41,21 @@ export default function HomePage() {
       <SakuraPetals />
 
       {/* Nav */}
-      <nav className="relative z-10 flex items-center justify-between px-4 py-4 md:px-8">
+      <nav className="relative z-10 flex items-center justify-between gap-2 px-4 py-4 md:px-8">
         <div className="pixel-font text-sm text-[#FF69B4]">Kawaii Couple</div>
-        <Link href="/games" className="btn-pixel btn-pixel-white text-xs py-2 px-3">
-          🌸 All Games
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/games" className="btn-pixel btn-pixel-white text-xs py-2 px-3">
+            🌸 All Games
+          </Link>
+          <a
+            href="https://ko-fi.com/roastlabai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-pixel btn-pixel-white text-xs py-2 px-3"
+          >
+            ☕ Ko-fi
+          </a>
+        </div>
       </nav>
 
       {/* Hero */}
@@ -120,6 +130,18 @@ export default function HomePage() {
           </Link>
         </div>
 
+        {/* Ko-fi section */}
+        <div className="mt-12 text-center">
+          <p className="font-semibold text-gray-600 mb-3">Love Kawaii Couple? Buy us a coffee~ ♡</p>
+          <a
+            href="https://ko-fi.com/roastlabai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-pixel btn-pixel-lavender"
+          >
+            ☕ Support on Ko-fi
+          </a>
+        </div>
       </main>
 
       {/* Browse hub for SEO + discovery */}

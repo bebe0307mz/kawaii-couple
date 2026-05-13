@@ -250,6 +250,21 @@ export default function ResultsPage() {
           cta="Challenge a friend"
         />
 
+        {/* Ko-fi prompt */}
+        <div className="card-pixel p-6 text-center mt-6">
+          <p className="font-bold text-gray-700 mb-2">Love Kawaii Couple? ♡</p>
+          <p className="text-sm font-semibold text-gray-500 mb-4">
+            Buy us a coffee~ (◡‿◡✿)
+          </p>
+          <a
+            href="https://ko-fi.com/roastlabai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-pixel"
+          >
+            ☕ Support on Ko-fi
+          </a>
+        </div>
       </div>
 
       <footer className="relative z-10 text-center py-8">
