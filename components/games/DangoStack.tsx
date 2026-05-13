@@ -9,27 +9,25 @@ interface DangoStackProps {
 
 interface Dango {
   id: number
-  x: number // percent across area, 0-100
-  y: number // px from top
+  laneX: number   // 0-100 percent of game area width
+  y: number
   speed: number
 }
 
 const GAME_DURATION = 45
-const CATCH_RADIUS_PCT = 10 // half-width of the catcher's catching zone in % of area width
-const CATCH_BAND_PX = 36 // vertical catch zone height
+const CATCH_RADIUS_PX = 55  // pixel tolerance for catch
 
 export default function DangoStack({ onComplete, playerEmail: _playerEmail }: DangoStackProps) {
   const [score, setScore] = useState(0)
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION)
   const [dangos, setDangos] = useState<Dango[]>([])
-  const [catcherX, setCatcherX] = useState(50)
+  const [bowlX, setBowlX] = useState(50)  // percent 0-100
   const [gameOver, setGameOver] = useState(false)
   const scoreRef = useRef(0)
   const gameOverRef = useRef(false)
   const idRef = useRef(0)
-  const catcherRef = useRef(50)
+  const bowlXRef = useRef(50)   // percent
   const areaRef = useRef<HTMLDivElement>(null)
-  const pointerActiveRef = useRef(false)
 
   const endGame = useCallback(() => {
     if (gameOverRef.current) return
@@ -41,11 +39,7 @@ export default function DangoStack({ onComplete, playerEmail: _playerEmail }: Da
   useEffect(() => {
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval)
-          endGame()
-          return 0
-        }
+        if (prev <= 1) { clearInterval(interval); endGame(); return 0 }
         return prev - 1
       })
     }, 1000)
@@ -60,15 +54,16 @@ export default function DangoStack({ onComplete, playerEmail: _playerEmail }: Da
         ...prev,
         {
           id,
-          x: 10 + Math.random() * 80,
+          laneX: 10 + Math.random() * 80,   // 10..90%
           y: -40,
-          speed: 110 + Math.random() * 70,
+          speed: 100 + Math.random() * 70,
         },
       ])
     }, 900)
     return () => clearInterval(spawn)
   }, [])
 
+  // Animation loop
   useEffect(() => {
     let frame: number
     let last = 0
@@ -76,20 +71,26 @@ export default function DangoStack({ onComplete, playerEmail: _playerEmail }: Da
       if (gameOverRef.current) return
       const dt = last ? (ts - last) / 1000 : 0.016
       last = ts
-      const areaH = areaRef.current?.clientHeight || 400
-      const catcherY = areaH - 60
+      const area = areaRef.current
+      if (!area) { frame = requestAnimationFrame(loop); return }
+      const areaH = area.clientHeight
+      const areaW = area.clientWidth
+      const catcherY = areaH - 55
+      const bowlPx = (bowlXRef.current / 100) * areaW
+
       setDangos((prev) => {
         const next: Dango[] = []
         for (const d of prev) {
           const newY = d.y + d.speed * dt
-          if (newY > catcherY && newY < catcherY + CATCH_BAND_PX) {
-            if (Math.abs(d.x - catcherRef.current) < CATCH_RADIUS_PCT) {
+          const dangoPx = (d.laneX / 100) * areaW
+          if (newY > catcherY - 10 && newY < catcherY + 40) {
+            if (Math.abs(dangoPx - bowlPx) < CATCH_RADIUS_PX) {
               scoreRef.current += 1
               setScore(scoreRef.current)
-              continue
+              continue  // caught!
             }
           }
-          if (newY > areaH + 40) continue
+          if (newY > areaH + 40) continue  // missed
           next.push({ ...d, y: newY })
         }
         return next
@@ -100,49 +101,15 @@ export default function DangoStack({ onComplete, playerEmail: _playerEmail }: Da
     return () => cancelAnimationFrame(frame)
   }, [])
 
-  function setCatcherFromClientX(clientX: number) {
-    const rect = areaRef.current?.getBoundingClientRect()
-    if (!rect) return
-    const pct = ((clientX - rect.left) / rect.width) * 100
-    const clamped = Math.max(0, Math.min(100, pct))
-    catcherRef.current = clamped
-    setCatcherX(clamped)
+  function handlePointerMove(clientX: number) {
+    const area = areaRef.current
+    if (!area || gameOverRef.current) return
+    const rect = area.getBoundingClientRect()
+    const x = clientX - rect.left
+    const pct = Math.max(5, Math.min(95, (x / rect.width) * 100))
+    bowlXRef.current = pct
+    setBowlX(pct)
   }
-
-  function onPointerDown(e: React.PointerEvent) {
-    if (gameOverRef.current) return
-    pointerActiveRef.current = true
-    e.currentTarget.setPointerCapture(e.pointerId)
-    setCatcherFromClientX(e.clientX)
-  }
-  function onPointerMove(e: React.PointerEvent) {
-    if (!pointerActiveRef.current) return
-    setCatcherFromClientX(e.clientX)
-  }
-  function onPointerUp(e: React.PointerEvent) {
-    pointerActiveRef.current = false
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId)
-    }
-  }
-
-  // Keyboard support
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (gameOverRef.current) return
-      if (e.key === 'ArrowLeft') {
-        const next = Math.max(0, catcherRef.current - 6)
-        catcherRef.current = next
-        setCatcherX(next)
-      } else if (e.key === 'ArrowRight') {
-        const next = Math.min(100, catcherRef.current + 6)
-        catcherRef.current = next
-        setCatcherX(next)
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
 
   const progress = ((GAME_DURATION - timeLeft) / GAME_DURATION) * 100
 
@@ -168,22 +135,33 @@ export default function DangoStack({ onComplete, playerEmail: _playerEmail }: Da
       <div
         ref={areaRef}
         className="relative flex-1 overflow-hidden border-t-2 border-[#FF69B4] select-none touch-none"
-        style={{ minHeight: 320, background: 'linear-gradient(to bottom, #FFF0F5, #FFE4F0)' }}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
+        style={{ minHeight: 320, background: 'linear-gradient(to bottom, #1a0a2e, #2d1b4e)' }}
+        onMouseMove={(e) => handlePointerMove(e.clientX)}
+        onTouchMove={(e) => { e.preventDefault(); handlePointerMove(e.touches[0].clientX) }}
+        onTouchStart={(e) => { e.preventDefault(); handlePointerMove(e.touches[0].clientX) }}
       >
+        {/* Stars background */}
+        {[...Array(8)].map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            left: `${10 + i * 12}%`,
+            top: `${5 + (i % 3) * 20}%`,
+            fontSize: 8,
+            opacity: 0.4,
+            color: 'white',
+          }}>★</div>
+        ))}
+
         {!gameOver && dangos.map((d) => (
           <div
             key={d.id}
             style={{
               position: 'absolute',
-              left: `${d.x}%`,
+              left: `${d.laneX}%`,
               top: d.y,
               transform: 'translateX(-50%)',
-              fontSize: 36,
-              pointerEvents: 'none',
+              fontSize: 34,
+              filter: 'drop-shadow(0 0 6px #FF69B4)',
             }}
           >
             🍡
@@ -194,12 +172,12 @@ export default function DangoStack({ onComplete, playerEmail: _playerEmail }: Da
           <div
             style={{
               position: 'absolute',
-              left: `${catcherX}%`,
-              bottom: 20,
+              left: `${bowlX}%`,
+              bottom: 16,
               transform: 'translateX(-50%)',
               fontSize: 48,
-              transition: 'left 60ms linear',
-              pointerEvents: 'none',
+              transition: 'left 0.04s linear',
+              filter: 'drop-shadow(0 0 8px #FF1493)',
             }}
           >
             🥣
@@ -207,18 +185,18 @@ export default function DangoStack({ onComplete, playerEmail: _playerEmail }: Da
         )}
 
         {gameOver && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-pink-100/80">
+          <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ background: 'rgba(26,10,46,0.85)' }}>
             <div className="text-5xl mb-3">🍡</div>
             <div className="pixel-font text-base text-[#FF1493] mb-2">Time Up!</div>
             <div className="font-bold text-3xl text-[#FF69B4]">{score} caught</div>
-            <p className="text-sm font-semibold text-gray-600 mt-2">Waiting for scores~ ♡</p>
+            <p className="text-sm font-semibold text-[#C084FC] mt-2">Waiting for scores~ ♡</p>
           </div>
         )}
       </div>
 
       <div className="px-4 py-2 text-center">
         <p className="text-xs font-semibold text-gray-500">
-          Drag left/right to slide the bowl 🥣 (◕‿◕)
+          Slide your finger to catch the dango! 🥣 (◕‿◕)
         </p>
       </div>
     </div>
