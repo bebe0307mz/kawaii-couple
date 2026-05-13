@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { QUIZ_QUESTIONS } from '@/lib/gameUtils'
 
 interface KawaiiQuizProps {
@@ -18,7 +18,7 @@ export default function KawaiiQuiz({ onComplete, playerEmail }: KawaiiQuizProps)
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION)
   const [gameOver, setGameOver] = useState(false)
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null)
-  const scoreRef = { current: score }
+  const scoreRef = useRef(0)
 
   const handleComplete = useCallback(
     (finalScore: number) => {
@@ -53,6 +53,7 @@ export default function KawaiiQuiz({ onComplete, playerEmail }: KawaiiQuizProps)
     let newScore = score
     if (correct) {
       newScore = score + 1
+      scoreRef.current = newScore
       setScore(newScore)
       setFeedback('correct')
     } else {
