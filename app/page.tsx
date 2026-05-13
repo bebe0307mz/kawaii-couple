@@ -44,9 +44,6 @@ export default function HomePage() {
       <nav className="relative z-10 flex items-center justify-between gap-2 px-4 py-4 md:px-8">
         <div className="pixel-font text-sm text-[#FF69B4]">Kawaii Couple</div>
         <div className="flex gap-2">
-          <Link href="/games" className="btn-pixel btn-pixel-white text-xs py-2 px-3">
-            🌸 All Games
-          </Link>
           <a
             href="https://ko-fi.com/roastlabai"
             target="_blank"
