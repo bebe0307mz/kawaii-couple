@@ -1,15 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import SakuraPetals from '@/components/SakuraPetals'
 
-export default function AuthPage() {
+function AuthForm() {
+  const searchParams = useSearchParams()
+  const joinCode = searchParams.get('code') || ''
+
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (joinCode) {
+      sessionStorage.setItem('pendingJoinCode', joinCode)
+    }
+  }, [joinCode])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -17,10 +27,14 @@ export default function AuthPage() {
     setLoading(true)
     setError('')
 
+    const callbackUrl = joinCode
+      ? `${window.location.origin}/auth/callback?joinCode=${joinCode}`
+      : `${window.location.origin}/auth/callback`
+
     const { error: err } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: callbackUrl,
       },
     })
 
@@ -41,6 +55,20 @@ export default function AuthPage() {
           Kawaii Couple
         </Link>
       </nav>
+
+      {joinCode && (
+        <div className="relative z-10 mx-auto mt-4 px-4 w-full max-w-md">
+          <div className="card-pixel-lavender p-3 flex items-center gap-3">
+            <span className="text-xl">🌸</span>
+            <div>
+              <p className="font-bold text-xs text-[#C084FC]">Invite code ready</p>
+              <p className="font-semibold text-xs text-gray-600">
+                Sign in to join game <span className="pixel-font text-[#FF1493]">{joinCode}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-16">
         <div className="card-pixel p-8 w-full max-w-md text-center">
@@ -117,5 +145,17 @@ export default function AuthPage() {
         </p>
       </footer>
     </div>
+  )
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#FFF0F5' }}>
+        <div className="text-5xl">🌸</div>
+      </div>
+    }>
+      <AuthForm />
+    </Suspense>
   )
 }

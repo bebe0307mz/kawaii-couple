@@ -1,14 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import SakuraPetals from '@/components/SakuraPetals'
 import type { User } from '@supabase/supabase-js'
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [user, setUser] = useState<User | null>(null)
   const [inviteCode, setInviteCode] = useState('')
   const [partnerCode, setPartnerCode] = useState('')
@@ -16,7 +17,16 @@ export default function DashboardPage() {
   const [creating, setCreating] = useState(false)
   const [joining, setJoining] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    // Pre-fill partner code from URL param (e.g. from /join/CODE flow)
+    const codeParam = searchParams.get('code')
+    if (codeParam) {
+      setPartnerCode(codeParam.toUpperCase())
+    }
+  }, [searchParams])
 
   useEffect(() => {
     async function loadUser() {
@@ -66,6 +76,19 @@ export default function DashboardPage() {
     await navigator.clipboard.writeText(inviteCode)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function handleShareLink() {
+    const inviteUrl = `https://kawaiicouple.roastlabai.com/join/${inviteCode}`
+    await navigator.clipboard.writeText(inviteUrl)
+    setCopiedLink(true)
+    setTimeout(() => setCopiedLink(false), 2000)
+  }
+
+  function handleWhatsApp() {
+    const inviteUrl = `https://kawaiicouple.roastlabai.com/join/${inviteCode}`
+    const waText = `Play Kawaii Couple mini games with me~ 🌸\nJoin here: ${inviteUrl}`
+    window.open(`https://wa.me/?text=${encodeURIComponent(waText)}`, '_blank')
   }
 
   async function handleJoinSession() {
@@ -184,16 +207,22 @@ export default function DashboardPage() {
                   {inviteCode}
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center flex-wrap">
                 <button onClick={handleCopyCode} className="btn-pixel">
                   {copied ? '✓ Copied!' : '💝 Copy Code'}
                 </button>
                 <Link href={`/lobby/${inviteCode}`} className="btn-pixel btn-pixel-lavender">
                   Go to Lobby 🌸
                 </Link>
+                <button onClick={handleShareLink} className="btn-pixel btn-pixel-white">
+                  {copiedLink ? '✓ Copied Link!' : '🔗 Share Link'}
+                </button>
+                <button onClick={handleWhatsApp} className="btn-pixel btn-pixel-white">
+                  💬 WhatsApp
+                </button>
               </div>
               <p className="text-sm text-gray-500 font-semibold mt-3">
-                Share this code with your partner~ ♡
+                Share this code or link with your partner~ ♡
               </p>
             </div>
           )}
@@ -232,5 +261,17 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="pixel-font text-sm text-[#FF69B4]">Loading<span className="loading-dots"></span></p>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   )
 }

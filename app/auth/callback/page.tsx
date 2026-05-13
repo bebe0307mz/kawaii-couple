@@ -11,6 +11,8 @@ function CallbackHandler() {
   useEffect(() => {
     async function handleCallback() {
       const code = searchParams.get('code')
+      const joinCode = searchParams.get('joinCode') || sessionStorage.getItem('pendingJoinCode') || ''
+      const dashboardUrl = joinCode ? `/dashboard?code=${joinCode}` : '/dashboard'
 
       if (code) {
         // PKCE flow - exchange code for session
@@ -18,15 +20,17 @@ function CallbackHandler() {
         if (error) {
           router.replace('/auth?error=login_failed')
         } else {
+          if (joinCode) sessionStorage.removeItem('pendingJoinCode')
           const hasUsername = data.user?.user_metadata?.username
-          router.replace(hasUsername ? '/dashboard' : '/setup')
+          router.replace(hasUsername ? dashboardUrl : '/setup')
         }
       } else {
         // Implicit flow - session already set via hash, just check
         const { data: { session } } = await supabase.auth.getSession()
         if (session) {
+          if (joinCode) sessionStorage.removeItem('pendingJoinCode')
           const hasUsername = session.user?.user_metadata?.username
-          router.replace(hasUsername ? '/dashboard' : '/setup')
+          router.replace(hasUsername ? dashboardUrl : '/setup')
         } else {
           router.replace('/auth')
         }
