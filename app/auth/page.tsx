@@ -14,6 +14,7 @@ function AuthForm() {
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
+  const [cooldown, setCooldown] = useState(0)
 
   useEffect(() => {
     if (joinCode) {
@@ -21,9 +22,15 @@ function AuthForm() {
     }
   }, [joinCode])
 
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const id = setInterval(() => setCooldown((c) => Math.max(0, c - 1)), 1000)
+    return () => clearInterval(id)
+  }, [cooldown])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!email) return
+    if (!email || cooldown > 0) return
     setLoading(true)
     setError('')
 
@@ -40,8 +47,9 @@ function AuthForm() {
 
     if (err) {
       const msg = err.message.toLowerCase()
-      if (msg.includes('rate limit') || msg.includes('too many')) {
-        setError('Too many emails sent~ wait a few minutes and try again ♡')
+      if (msg.includes('rate limit') || msg.includes('too many') || msg.includes('exceeded')) {
+        setError('Magic link already on the way~ check your inbox (and spam folder). Try again in a minute if it doesn\'t arrive ♡')
+        setCooldown(60)
       } else if (msg.includes('invalid email')) {
         setError('Hmm, that email looks wrong~ check it and try again!')
       } else {
@@ -49,6 +57,7 @@ function AuthForm() {
       }
     } else {
       setSent(true)
+      setCooldown(60)
     }
     setLoading(false)
   }
@@ -111,10 +120,14 @@ function AuthForm() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || cooldown > 0}
                 className="btn-pixel w-full mt-2"
               >
-                {loading ? 'Sending ♡...' : '✉️ Send Magic Link'}
+                {loading
+                  ? 'Sending ♡...'
+                  : cooldown > 0
+                  ? `Wait ${cooldown}s before resending ♡`
+                  : '✉️ Send Magic Link'}
               </button>
 
               <p className="text-xs text-gray-500 font-semibold mt-2">
