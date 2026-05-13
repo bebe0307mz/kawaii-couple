@@ -14,10 +14,12 @@ interface Target {
   size: number
   color: string
   popping: boolean
+  spawnedAt: number
 }
 
 const GAME_DURATION = 45
-const MAX_TARGETS = 6
+const MAX_TARGETS = 10
+const TARGET_LIFETIME_MS = 1800
 const COLORS = ['#FF69B4', '#E6CCFF', '#FF8C94', '#C084FC', '#FFB6C1', '#A78BFA']
 
 export default function TargetPop({ onComplete, playerEmail }: TargetPopProps) {
@@ -34,7 +36,7 @@ export default function TargetPop({ onComplete, playerEmail }: TargetPopProps) {
     setTargets((prev) => {
       if (prev.length >= MAX_TARGETS) return prev
       const id = ++targetIdRef.current
-      const size = 40 + Math.random() * 40
+      const size = 32 + Math.random() * 36
       return [
         ...prev,
         {
@@ -44,17 +46,24 @@ export default function TargetPop({ onComplete, playerEmail }: TargetPopProps) {
           size,
           color: COLORS[Math.floor(Math.random() * COLORS.length)],
           popping: false,
+          spawnedAt: Date.now(),
         },
       ]
     })
   }, [])
 
   useEffect(() => {
-    const spawnInterval = setInterval(spawnTarget, 1500)
+    const spawnInterval = setInterval(spawnTarget, 600)
+    // Despawn targets older than TARGET_LIFETIME_MS so the board keeps churning
+    const cullInterval = setInterval(() => {
+      const cutoff = Date.now() - TARGET_LIFETIME_MS
+      setTargets((prev) => prev.filter((t) => t.popping || t.spawnedAt > cutoff))
+    }, 200)
     const countdownInterval = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(spawnInterval)
+          clearInterval(cullInterval)
           clearInterval(countdownInterval)
           gameOverRef.current = true
           setGameOver(true)
@@ -64,12 +73,13 @@ export default function TargetPop({ onComplete, playerEmail }: TargetPopProps) {
         return prev - 1
       })
     }, 1000)
-    // Spawn initial targets
-    for (let i = 0; i < 3; i++) {
-      setTimeout(spawnTarget, i * 300)
+    // Spawn initial flurry
+    for (let i = 0; i < 5; i++) {
+      setTimeout(spawnTarget, i * 150)
     }
     return () => {
       clearInterval(spawnInterval)
+      clearInterval(cullInterval)
       clearInterval(countdownInterval)
     }
   }, [spawnTarget, onComplete])

@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { GAME_NAMES, GAME_EMOJIS } from '@/lib/gameUtils'
 import SakuraPetals from '@/components/SakuraPetals'
 import ShareCard from '@/components/ShareCard'
+import DownloadableShareCard from '@/components/DownloadableShareCard'
 import type { User } from '@supabase/supabase-js'
 import type { GameSession, GameScore } from '@/lib/supabase'
 
@@ -181,15 +182,22 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        {/* Game by game breakdown */}
+        {/* Game by game breakdown - only played games */}
         <div className="card-pixel p-5 mb-6 text-left">
           <h2 className="pixel-font text-xs text-[#FF1493] mb-4">Game Breakdown ✿</h2>
           <div className="space-y-3">
-            {GAME_NAMES.map((name, i) => {
-              const gs = scores.find((s) => s.game === i)
-              const myGS = playerRole === 'player1' ? gs?.player1 : gs?.player2
-              const oppGS = playerRole === 'player1' ? gs?.player2 : gs?.player1
-              const gameWinner = gs?.winner
+            {scores.length === 0 && (
+              <p className="text-xs text-gray-400 font-semibold text-center py-4">
+                No games completed yet~ ♡
+              </p>
+            )}
+            {scores.map((gs) => {
+              const i = gs.game
+              const name = GAME_NAMES[i]
+              const emoji = GAME_EMOJIS[i]
+              const myGS = playerRole === 'player1' ? gs.player1 : gs.player2
+              const oppGS = playerRole === 'player1' ? gs.player2 : gs.player1
+              const gameWinner = gs.winner
               const iWon =
                 (playerRole === 'player1' && gameWinner === 'player1') ||
                 (playerRole === 'player2' && gameWinner === 'player2')
@@ -197,21 +205,17 @@ export default function ResultsPage() {
 
               return (
                 <div key={i} className="flex items-center gap-3 py-2 border-b border-pink-100 last:border-0">
-                  <span className="text-xl w-8">{GAME_EMOJIS[i]}</span>
+                  <span className="text-xl w-8">{emoji}</span>
                   <div className="flex-1">
                     <div className="font-bold text-sm text-gray-700">{name}</div>
-                    {gs ? (
-                      <div className="text-xs text-gray-500 font-semibold">
-                        You: {myGS ?? 0} | {opponentName}: {oppGS ?? 0}
-                      </div>
-                    ) : (
-                      <div className="text-xs text-gray-400">Not played</div>
-                    )}
+                    <div className="text-xs text-gray-500 font-semibold">
+                      You: {myGS ?? 0} | {opponentName}: {oppGS ?? 0}
+                    </div>
                   </div>
                   <div className={`pixel-font text-xs ${
                     isTieGame ? 'text-gray-500' : iWon ? 'text-[#FF1493]' : 'text-[#C084FC]'
                   }`}>
-                    {gs ? (isTieGame ? 'TIE' : iWon ? 'WIN' : 'LOSS') : '-'}
+                    {isTieGame ? 'TIE' : iWon ? 'WIN' : 'LOSS'}
                   </div>
                 </div>
               )
@@ -249,6 +253,19 @@ export default function ResultsPage() {
           shareUrl="https://kawaiicouple.roastlabai.com"
           cta="Challenge a friend"
         />
+
+        {/* Downloadable result card */}
+        <div className="mt-6">
+          <DownloadableShareCard
+            myName={(session.player1_username || session.player1_email?.split('@')[0]) && playerRole === 'player1'
+              ? (session.player1_username || session.player1_email?.split('@')[0] || 'You')
+              : (session.player2_username || session.player2_email?.split('@')[0] || 'You')}
+            oppName={opponentName}
+            myScore={myTotal}
+            oppScore={oppTotal}
+            outcome={isTie ? 'tie' : isWinner ? 'win' : 'loss'}
+          />
+        </div>
 
         {/* Ko-fi - emotional, context-aware */}
         <div className="text-center mt-4">

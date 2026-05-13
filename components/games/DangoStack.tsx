@@ -9,24 +9,27 @@ interface DangoStackProps {
 
 interface Dango {
   id: number
-  laneIsLeft: boolean
-  y: number
+  x: number // percent across area, 0-100
+  y: number // px from top
   speed: number
 }
 
 const GAME_DURATION = 45
+const CATCH_RADIUS_PCT = 10 // half-width of the catcher's catching zone in % of area width
+const CATCH_BAND_PX = 36 // vertical catch zone height
 
 export default function DangoStack({ onComplete, playerEmail: _playerEmail }: DangoStackProps) {
   const [score, setScore] = useState(0)
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION)
   const [dangos, setDangos] = useState<Dango[]>([])
-  const [catcherLeft, setCatcherLeft] = useState(true)
+  const [catcherX, setCatcherX] = useState(50)
   const [gameOver, setGameOver] = useState(false)
   const scoreRef = useRef(0)
   const gameOverRef = useRef(false)
   const idRef = useRef(0)
-  const catcherRef = useRef(true)
+  const catcherRef = useRef(50)
   const areaRef = useRef<HTMLDivElement>(null)
+  const pointerActiveRef = useRef(false)
 
   const endGame = useCallback(() => {
     if (gameOverRef.current) return
@@ -57,12 +60,12 @@ export default function DangoStack({ onComplete, playerEmail: _playerEmail }: Da
         ...prev,
         {
           id,
-          laneIsLeft: Math.random() < 0.5,
+          x: 10 + Math.random() * 80,
           y: -40,
-          speed: 90 + Math.random() * 60,
+          speed: 110 + Math.random() * 70,
         },
       ])
-    }, 1100)
+    }, 900)
     return () => clearInterval(spawn)
   }, [])
 
@@ -79,14 +82,14 @@ export default function DangoStack({ onComplete, playerEmail: _playerEmail }: Da
         const next: Dango[] = []
         for (const d of prev) {
           const newY = d.y + d.speed * dt
-          if (newY > catcherY && newY < catcherY + 30) {
-            if (d.laneIsLeft === catcherRef.current) {
+          if (newY > catcherY && newY < catcherY + CATCH_BAND_PX) {
+            if (Math.abs(d.x - catcherRef.current) < CATCH_RADIUS_PCT) {
               scoreRef.current += 1
               setScore(scoreRef.current)
-              continue // caught, remove
+              continue
             }
           }
-          if (newY > areaH + 40) continue // missed off screen
+          if (newY > areaH + 40) continue
           next.push({ ...d, y: newY })
         }
         return next
@@ -97,11 +100,49 @@ export default function DangoStack({ onComplete, playerEmail: _playerEmail }: Da
     return () => cancelAnimationFrame(frame)
   }, [])
 
-  function moveCatcher(left: boolean) {
-    if (gameOverRef.current) return
-    catcherRef.current = left
-    setCatcherLeft(left)
+  function setCatcherFromClientX(clientX: number) {
+    const rect = areaRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const pct = ((clientX - rect.left) / rect.width) * 100
+    const clamped = Math.max(0, Math.min(100, pct))
+    catcherRef.current = clamped
+    setCatcherX(clamped)
   }
+
+  function onPointerDown(e: React.PointerEvent) {
+    if (gameOverRef.current) return
+    pointerActiveRef.current = true
+    e.currentTarget.setPointerCapture(e.pointerId)
+    setCatcherFromClientX(e.clientX)
+  }
+  function onPointerMove(e: React.PointerEvent) {
+    if (!pointerActiveRef.current) return
+    setCatcherFromClientX(e.clientX)
+  }
+  function onPointerUp(e: React.PointerEvent) {
+    pointerActiveRef.current = false
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    }
+  }
+
+  // Keyboard support
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (gameOverRef.current) return
+      if (e.key === 'ArrowLeft') {
+        const next = Math.max(0, catcherRef.current - 6)
+        catcherRef.current = next
+        setCatcherX(next)
+      } else if (e.key === 'ArrowRight') {
+        const next = Math.min(100, catcherRef.current + 6)
+        catcherRef.current = next
+        setCatcherX(next)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   const progress = ((GAME_DURATION - timeLeft) / GAME_DURATION) * 100
 
@@ -126,18 +167,23 @@ export default function DangoStack({ onComplete, playerEmail: _playerEmail }: Da
 
       <div
         ref={areaRef}
-        className="relative flex-1 overflow-hidden border-t-2 border-[#FF69B4] select-none"
+        className="relative flex-1 overflow-hidden border-t-2 border-[#FF69B4] select-none touch-none"
         style={{ minHeight: 320, background: 'linear-gradient(to bottom, #FFF0F5, #FFE4F0)' }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
       >
         {!gameOver && dangos.map((d) => (
           <div
             key={d.id}
             style={{
               position: 'absolute',
-              left: d.laneIsLeft ? '25%' : '75%',
+              left: `${d.x}%`,
               top: d.y,
               transform: 'translateX(-50%)',
               fontSize: 36,
+              pointerEvents: 'none',
             }}
           >
             🍡
@@ -148,48 +194,16 @@ export default function DangoStack({ onComplete, playerEmail: _playerEmail }: Da
           <div
             style={{
               position: 'absolute',
-              left: catcherLeft ? '25%' : '75%',
+              left: `${catcherX}%`,
               bottom: 20,
               transform: 'translateX(-50%)',
-              fontSize: 44,
-              transition: 'left 0.15s',
+              fontSize: 48,
+              transition: 'left 60ms linear',
+              pointerEvents: 'none',
             }}
           >
             🥣
           </div>
-        )}
-
-        {!gameOver && (
-          <>
-            <button
-              onClick={() => moveCatcher(true)}
-              onTouchStart={(e) => { e.preventDefault(); moveCatcher(true) }}
-              style={{
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                width: '50%',
-                height: '100%',
-                background: 'transparent',
-                border: 'none',
-              }}
-              aria-label="Move left"
-            />
-            <button
-              onClick={() => moveCatcher(false)}
-              onTouchStart={(e) => { e.preventDefault(); moveCatcher(false) }}
-              style={{
-                position: 'absolute',
-                right: 0,
-                top: 0,
-                width: '50%',
-                height: '100%',
-                background: 'transparent',
-                border: 'none',
-              }}
-              aria-label="Move right"
-            />
-          </>
         )}
 
         {gameOver && (
@@ -204,7 +218,7 @@ export default function DangoStack({ onComplete, playerEmail: _playerEmail }: Da
 
       <div className="px-4 py-2 text-center">
         <p className="text-xs font-semibold text-gray-500">
-          Tap left/right to slide the catcher 🥣 (◕‿◕)
+          Drag left/right to slide the bowl 🥣 (◕‿◕)
         </p>
       </div>
     </div>

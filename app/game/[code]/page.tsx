@@ -34,6 +34,7 @@ import NumberSequence from '@/components/games/NumberSequence'
 import ColorMatch from '@/components/games/ColorMatch'
 import SlidePuzzle from '@/components/games/SlidePuzzle'
 import QuickCount from '@/components/games/QuickCount'
+import BGMPlayer from '@/components/BGMPlayer'
 import type { User } from '@supabase/supabase-js'
 import type { GameSession, GameScore } from '@/lib/supabase'
 
@@ -452,6 +453,7 @@ export default function GamePage() {
 
   return (
     <div className="relative min-h-screen flex flex-col" style={{ maxHeight: '100dvh', overflow: 'hidden' }}>
+      <BGMPlayer seed={gameIndex} active={phase === 'playing' || phase === 'countdown'} />
       {/* Countdown overlay */}
       {phase === 'countdown' && (
         <div className="countdown-overlay z-50">
