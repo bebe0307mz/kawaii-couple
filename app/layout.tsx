@@ -1,5 +1,8 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import './globals.css'
+
+const ADSENSE_PUB_ID = process.env.NEXT_PUBLIC_ADSENSE_PUB_ID
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://kawaiicouple.roastlabai.com'),
@@ -41,6 +44,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      {ADSENSE_PUB_ID && (
+        <Script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUB_ID}`}
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+      )}
       <body className="min-h-screen">{children}</body>
     </html>
   )

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { GAME_NAMES, GAME_EMOJIS } from '@/lib/gameUtils'
 import SakuraPetals from '@/components/SakuraPetals'
+import AdSlot from '@/components/AdSlot'
 import type { User } from '@supabase/supabase-js'
 import type { GameSession, GameScore } from '@/lib/supabase'
 
@@ -228,28 +229,35 @@ export default function ResultsPage() {
           </Link>
         </div>
 
-        {/* Ko-fi prompt */}
-        <div className="card-pixel p-6 text-center">
-          <p className="font-bold text-gray-700 mb-2">Love Kawaii Couple? ♡</p>
+        {/* Ko-fi - emotional, context-aware */}
+        <div className="card-pixel-lavender p-6 text-center mb-6">
+          <div className="text-3xl mb-3">☕</div>
+          <p className="pixel-font text-xs text-[#C084FC] mb-2">
+            {isTie
+              ? 'Perfectly matched, both of you! ★'
+              : isWinner
+              ? 'You absolutely crushed it today! ♡'
+              : 'You played with all your heart~ ♡'}
+          </p>
+          <p className="font-bold text-gray-700 mb-1">
+            If today made you smile
+          </p>
           <p className="text-sm font-semibold text-gray-500 mb-4">
-            Buy us a coffee~ (◡‿◡✿)
+            buy us a coffee~ it keeps the games kawaii (◡‿◡✿)
           </p>
           <a
             href="https://ko-fi.com/roastlabai"
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-pixel"
+            className="btn-pixel btn-pixel-lavender"
           >
             ☕ Support on Ko-fi
           </a>
         </div>
 
-        {/* AdSense placeholder */}
-        <div className="mt-8">
-          {/* AdSense slot */}
-          <div className="w-full h-24 bg-pink-50 border-2 border-dashed border-pink-200 rounded flex items-center justify-center text-pink-300 text-sm font-semibold">
-            Advertisement
-          </div>
+        {/* AdSense slot */}
+        <div className="mt-2 mb-4">
+          <AdSlot />
         </div>
       </div>
 
