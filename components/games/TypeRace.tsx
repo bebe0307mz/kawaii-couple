@@ -30,6 +30,8 @@ export default function TypeRace({ onComplete, playerEmail }: TypeRaceProps) {
   const [gameOver, setGameOver] = useState(false)
   const [finalWpm, setFinalWpm] = useState(0)
   const gameOverRef = useRef(false)
+  const typedRef = useRef('')
+  const startTimeRef = useRef(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const endGame = useCallback((typedStr: string, elapsed: number) => {
@@ -64,7 +66,7 @@ export default function TypeRace({ onComplete, playerEmail }: TypeRaceProps) {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(interval)
-          endGame(typed, Date.now() - startTime)
+          endGame(typedRef.current, Date.now() - startTimeRef.current)
           return 0
         }
         return prev - 1
@@ -79,8 +81,10 @@ export default function TypeRace({ onComplete, playerEmail }: TypeRaceProps) {
     const value = e.target.value
 
     if (!started && value.length > 0) {
+      const now = Date.now()
       setStarted(true)
-      setStartTime(Date.now())
+      setStartTime(now)
+      startTimeRef.current = now
     }
 
     // Only allow correct prefix
@@ -93,12 +97,14 @@ export default function TypeRace({ onComplete, playerEmail }: TypeRaceProps) {
     }
 
     if (valid) {
+      typedRef.current = value
       setTyped(value)
       if (value.length === sentence.length) {
-        endGame(value, Date.now() - startTime)
+        endGame(value, Date.now() - startTimeRef.current)
       }
     } else {
       // Allow wrong chars too (but show as red)
+      typedRef.current = value
       setTyped(value)
     }
   }

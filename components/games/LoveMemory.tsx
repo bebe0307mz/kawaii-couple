@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 const EMOJIS = ['💝', '💕', '🌸', '🍡', '🦋', '🎀', '🌈', '⭐']
 
@@ -37,14 +37,17 @@ export default function LoveMemory({ onComplete, playerEmail }: LoveMemoryProps)
   const [moves, setMoves] = useState(0)
   const [gameOver, setGameOver] = useState(false)
   const [startTime] = useState(Date.now())
+  const gameOverRef = useRef(false)
+  const matchedRef = useRef(0)
 
   const handleComplete = useCallback(
     (pairs: number) => {
-      if (gameOver) return
+      if (gameOverRef.current) return
+      gameOverRef.current = true
       setGameOver(true)
       onComplete(pairs)
     },
-    [gameOver, onComplete]
+    [onComplete]
   )
 
   useEffect(() => {
@@ -52,14 +55,14 @@ export default function LoveMemory({ onComplete, playerEmail }: LoveMemoryProps)
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(interval)
-          handleComplete(matched)
+          handleComplete(matchedRef.current)
           return 0
         }
         return prev - 1
       })
     }, 1000)
     return () => clearInterval(interval)
-  }, [matched, handleComplete])
+  }, [handleComplete])
 
   function handleFlip(id: number) {
     if (gameOver) return
@@ -90,6 +93,7 @@ export default function LoveMemory({ onComplete, playerEmail }: LoveMemoryProps)
             )
           )
           const newMatched = matched + 1
+          matchedRef.current = newMatched
           setMatched(newMatched)
           setFlipped([])
           if (newMatched === EMOJIS.length) {
