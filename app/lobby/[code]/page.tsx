@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import SakuraPetals from '@/components/SakuraPetals'
+import ShareCard from '@/components/ShareCard'
 import type { User } from '@supabase/supabase-js'
 import type { GameSession } from '@/lib/supabase'
 
@@ -198,14 +199,25 @@ export default function LobbyPage() {
             </div>
 
             {!bothReady ? (
-              <div className="card-pixel p-6 max-w-sm mx-auto">
-                <p className="font-bold text-[#FF69B4] text-lg">
-                  Waiting for your babe<span className="loading-dots"></span> ♡
-                </p>
-                <p className="text-sm font-semibold text-gray-500 mt-2">
-                  (◡‿◡✿) Share the code above!
-                </p>
-              </div>
+              <>
+                <div className="card-pixel p-6 max-w-sm mx-auto mb-6">
+                  <p className="font-bold text-[#FF69B4] text-lg">
+                    Waiting for your babe<span className="loading-dots"></span> ♡
+                  </p>
+                  <p className="text-sm font-semibold text-gray-500 mt-2">
+                    (◡‿◡✿) Share the code above!
+                  </p>
+                </div>
+                <div className="max-w-sm mx-auto">
+                  <ShareCard
+                    title="Send the invite ♡"
+                    body={`Tap to share an invite link with your partner. One tap and they're in.`}
+                    shareText={`Come play Kawaii Couple with me 💕`}
+                    shareUrl={`https://kawaiicouple.roastlabai.com/join/${code}`}
+                    cta="Send invite"
+                  />
+                </div>
+              </>
             ) : (
               <div className="card-pixel p-6 max-w-sm mx-auto">
                 <p className="font-bold text-[#FF69B4] text-lg bounce-kawaii">

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import SakuraPetals from '@/components/SakuraPetals'
+import { TOPIC_META } from '@/lib/topicMeta'
 
 const GAMES = [
   {
@@ -42,14 +43,9 @@ export default function HomePage() {
       {/* Nav */}
       <nav className="relative z-10 flex items-center justify-between px-4 py-4 md:px-8">
         <div className="pixel-font text-sm text-[#FF69B4]">Kawaii Couple</div>
-        <a
-          href="https://ko-fi.com/roastlabai"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-pixel btn-pixel-white text-xs py-2 px-3"
-        >
-          ☕ Ko-fi
-        </a>
+        <Link href="/games" className="btn-pixel btn-pixel-white text-xs py-2 px-3">
+          🌸 All Games
+        </Link>
       </nav>
 
       {/* Hero */}
@@ -124,27 +120,28 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {/* Ko-fi section */}
-        <div className="mt-12 text-center">
-          <p className="font-semibold text-gray-600 mb-3">Love Kawaii Couple? Buy us a coffee~ ♡</p>
-          <a
-            href="https://ko-fi.com/roastlabai"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-pixel btn-pixel-lavender"
-          >
-            ☕ Support on Ko-fi
-          </a>
-        </div>
-
-        {/* AdSense placeholder */}
-        <div className="mt-12 w-full max-w-2xl">
-          {/* AdSense slot */}
-          <div className="w-full h-24 bg-pink-50 border-2 border-dashed border-pink-200 rounded flex items-center justify-center text-pink-300 text-sm font-semibold">
-            Advertisement
-          </div>
-        </div>
       </main>
+
+      {/* Browse hub for SEO + discovery */}
+      <section className="relative z-10 max-w-4xl mx-auto px-4 mt-16 mb-12">
+        <h2 className="pixel-font text-sm text-[#FF1493] mb-5 text-center">Browse couple games ✿</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+          {TOPIC_META.map((t) => (
+            <Link
+              key={t.slug}
+              href={`/play/${t.slug}`}
+              className="card-pixel p-3 text-center hover:scale-105 transition-transform"
+            >
+              <div className="font-bold text-sm text-gray-700">{t.h1}</div>
+            </Link>
+          ))}
+        </div>
+        <div className="text-center">
+          <Link href="/games" className="btn-pixel btn-pixel-lavender text-xs py-2 px-4">
+            See all 30 games ★
+          </Link>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="relative z-10 text-center py-8 border-t-2 border-pink-200">

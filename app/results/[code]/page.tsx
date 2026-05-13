@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { GAME_NAMES, GAME_EMOJIS } from '@/lib/gameUtils'
 import SakuraPetals from '@/components/SakuraPetals'
+import ShareCard from '@/components/ShareCard'
 import type { User } from '@supabase/supabase-js'
 import type { GameSession, GameScore } from '@/lib/supabase'
 
@@ -228,29 +229,27 @@ export default function ResultsPage() {
           </Link>
         </div>
 
-        {/* Ko-fi prompt */}
-        <div className="card-pixel p-6 text-center">
-          <p className="font-bold text-gray-700 mb-2">Love Kawaii Couple? ♡</p>
-          <p className="text-sm font-semibold text-gray-500 mb-4">
-            Buy us a coffee~ (◡‿◡✿)
-          </p>
-          <a
-            href="https://ko-fi.com/roastlabai"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-pixel"
-          >
-            ☕ Support on Ko-fi
-          </a>
-        </div>
+        {/* Viral share */}
+        <ShareCard
+          title={isTie ? 'Equally matched ♡' : isWinner ? `You beat ${opponentName}! 👑` : `${opponentName} won today ♡`}
+          body={
+            isWinner
+              ? `You beat ${opponentName} ${myTotal}-${oppTotal} in 5 kawaii games. Challenge another friend?`
+              : isTie
+              ? `You and ${opponentName} tied ${myTotal}-${oppTotal}. Challenge another friend to break it?`
+              : `${opponentName} beat you ${oppTotal}-${myTotal}. Challenge a friend to redeem yourself?`
+          }
+          shareText={
+            isWinner
+              ? `I just beat ${opponentName} ${myTotal}-${oppTotal} at Kawaii Couple 💕 think you can do better?`
+              : isTie
+              ? `Tied ${myTotal}-${oppTotal} at Kawaii Couple 💕 settle it with me?`
+              : `Lost ${oppTotal}-${myTotal} at Kawaii Couple 💕 think you can beat me?`
+          }
+          shareUrl="https://kawaiicouple.roastlabai.com"
+          cta="Challenge a friend"
+        />
 
-        {/* AdSense placeholder */}
-        <div className="mt-8">
-          {/* AdSense slot */}
-          <div className="w-full h-24 bg-pink-50 border-2 border-dashed border-pink-200 rounded flex items-center justify-center text-pink-300 text-sm font-semibold">
-            Advertisement
-          </div>
-        </div>
       </div>
 
       <footer className="relative z-10 text-center py-8">
