@@ -152,6 +152,9 @@ export default function HomePage() {
           Kawaii Couple by Roast Lab AI 🌸
         </p>
         <p className="text-sm text-gray-400 mt-1">(✿◠‿◠) Made with love</p>
+        <div className="mt-2">
+          <Link href="/privacy" className="text-xs text-gray-400 hover:text-[#FF69B4] font-semibold">Privacy Policy</Link>
+        </div>
       </footer>
     </div>
   )
