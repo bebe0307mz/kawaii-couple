@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import SakuraPetals from '@/components/SakuraPetals'
 import AuthRedirectGuard from '@/components/AuthRedirectGuard'
+import BGMPlayer from '@/components/BGMPlayer'
 import { TOPIC_META } from '@/lib/topicMeta'
 
 const GAMES = [
@@ -40,6 +41,7 @@ export default function HomePage() {
   return (
     <div className="relative min-h-screen">
       <AuthRedirectGuard />
+      <BGMPlayer autoplay />
       <SakuraPetals />
 
       {/* Nav */}
