@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import SakuraPetals from '@/components/SakuraPetals'
+import AdSlot from '@/components/AdSlot'
 import type { User } from '@supabase/supabase-js'
 import type { GameSession } from '@/lib/supabase'
 
@@ -214,6 +215,26 @@ export default function LobbyPage() {
                 <p className="text-sm font-semibold text-gray-500 mt-2">
                   Starting soon~ ♡
                 </p>
+              </div>
+            )}
+
+            {/* Ko-fi + AdSense while waiting */}
+            {!bothReady && (
+              <div className="mt-8 max-w-sm mx-auto space-y-4">
+                <div className="text-center">
+                  <p className="text-sm font-semibold text-gray-500 mb-2">
+                    While you wait~ ♡
+                  </p>
+                  <a
+                    href="https://ko-fi.com/roastlabai"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-pixel btn-pixel-white text-xs"
+                  >
+                    ☕ Buy us a coffee on Ko-fi
+                  </a>
+                </div>
+                <AdSlot />
               </div>
             )}
           </>
