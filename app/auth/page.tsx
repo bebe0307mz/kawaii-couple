@@ -39,7 +39,14 @@ function AuthForm() {
     })
 
     if (err) {
-      setError(err.message)
+      const msg = err.message.toLowerCase()
+      if (msg.includes('rate limit') || msg.includes('too many')) {
+        setError('Too many emails sent~ wait a few minutes and try again ♡')
+      } else if (msg.includes('invalid email')) {
+        setError('Hmm, that email looks wrong~ check it and try again!')
+      } else {
+        setError(err.message)
+      }
     } else {
       setSent(true)
     }
