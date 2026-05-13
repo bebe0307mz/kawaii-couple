@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import SakuraPetals from '@/components/SakuraPetals'
-import AdSlot from '@/components/AdSlot'
 
 const GAMES = [
   {
@@ -138,9 +137,12 @@ export default function HomePage() {
           </a>
         </div>
 
-        {/* AdSense slot */}
+        {/* AdSense placeholder */}
         <div className="mt-12 w-full max-w-2xl">
-          <AdSlot />
+          {/* AdSense slot */}
+          <div className="w-full h-24 bg-pink-50 border-2 border-dashed border-pink-200 rounded flex items-center justify-center text-pink-300 text-sm font-semibold">
+            Advertisement
+          </div>
         </div>
       </main>
 
