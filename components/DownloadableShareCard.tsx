@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTheme } from '@/lib/ThemeContext'
+import type { Theme } from '@/lib/themes'
 
 type Props = {
   myName: string
@@ -16,19 +18,21 @@ const H = 1350 // 4:5 portrait, IG-friendly
 function drawCard(
   ctx: CanvasRenderingContext2D,
   { myName, oppName, myScore, oppScore, outcome }: Props,
+  theme: Theme,
 ) {
-  // Background gradient
+  // Background gradient from theme palette
   const bg = ctx.createLinearGradient(0, 0, 0, H)
-  bg.addColorStop(0, '#FFE4F0')
-  bg.addColorStop(1, '#FFD1E8')
+  bg.addColorStop(0, theme.colors.bg)
+  bg.addColorStop(1, theme.colors.cardBg)
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, W, H)
 
-  // Sakura petals (decorative dots)
-  ctx.fillStyle = 'rgba(255, 105, 180, 0.15)'
-  for (let i = 0; i < 20; i++) {
+  // Decorative confetti dots in theme colors
+  for (let i = 0; i < 24; i++) {
     const x = (i * 173) % W
     const y = (i * 257) % H
+    const color = theme.confetti[i % theme.confetti.length]
+    ctx.fillStyle = color + '33' // ~20% opacity
     ctx.beginPath()
     ctx.arc(x, y, 18 + (i % 3) * 8, 0, Math.PI * 2)
     ctx.fill()
@@ -39,7 +43,7 @@ function drawCard(
   const cardY = 120
   const cardW = W - 160
   const cardH = H - 240
-  ctx.shadowColor = 'rgba(255, 20, 147, 0.18)'
+  ctx.shadowColor = theme.colors.primary + '2E' // ~18% opacity
   ctx.shadowBlur = 30
   ctx.shadowOffsetY = 10
   ctx.fillStyle = '#ffffff'
@@ -48,19 +52,25 @@ function drawCard(
   ctx.shadowBlur = 0
   ctx.shadowOffsetY = 0
 
-  // Card border (pixel style)
+  // Card border (pixel style) — outer black, inset accent rectangles in theme
   ctx.strokeStyle = '#1a1a1a'
   ctx.lineWidth = 6
   ctx.strokeRect(cardX, cardY, cardW, cardH)
-  ctx.fillStyle = '#FF69B4'
+  ctx.fillStyle = theme.colors.secondary
   ctx.fillRect(cardX + 12, cardY + cardH, cardW, 12)
   ctx.fillRect(cardX + cardW, cardY + 12, 12, cardH)
+
+  // Theme badge - top right corner of card (so viewers know which theme)
+  ctx.textAlign = 'right'
+  ctx.font = 'bold 32px system-ui, sans-serif'
+  ctx.fillStyle = theme.colors.primary
+  ctx.fillText(`${theme.emoji} ${theme.name}`, cardX + cardW - 30, cardY + 60)
+  ctx.textAlign = 'center'
 
   // Header emoji
   const headerEmoji = outcome === 'win' ? '🏆' : outcome === 'tie' ? '🤝' : '💕'
   ctx.font = '160px "Apple Color Emoji", "Segoe UI Emoji", sans-serif'
-  ctx.textAlign = 'center'
-  ctx.fillText(headerEmoji, W / 2, cardY + 200)
+  ctx.fillText(headerEmoji, W / 2, cardY + 220)
 
   // Headline
   const headline =
@@ -69,33 +79,33 @@ function drawCard(
       : outcome === 'tie'
       ? "It's a tie ♡"
       : `${oppName} wins today`
-  ctx.fillStyle = '#FF1493'
+  ctx.fillStyle = theme.colors.primary
   ctx.font = 'bold 64px system-ui, -apple-system, sans-serif'
-  wrapText(ctx, headline, W / 2, cardY + 300, cardW - 80, 72)
+  wrapText(ctx, headline, W / 2, cardY + 320, cardW - 80, 72)
 
   // Subheading
-  ctx.fillStyle = '#C084FC'
+  ctx.fillStyle = theme.colors.accent
   ctx.font = 'bold 36px system-ui, sans-serif'
-  ctx.fillText('Kawaii Couple', W / 2, cardY + 400)
+  ctx.fillText('Kawaii Couple', W / 2, cardY + 420)
 
   // Score showdown
-  const scoreY = cardY + 560
+  const scoreY = cardY + 580
   const myX = cardX + cardW * 0.28
   const oppX = cardX + cardW * 0.72
 
-  ctx.fillStyle = '#FF69B4'
+  ctx.fillStyle = theme.colors.secondary
   ctx.font = 'bold 180px system-ui, sans-serif'
   ctx.fillText(String(myScore), myX, scoreY)
-  ctx.fillStyle = '#C084FC'
+  ctx.fillStyle = theme.colors.accent
   ctx.fillText(String(oppScore), oppX, scoreY)
 
-  ctx.fillStyle = '#666'
+  ctx.fillStyle = theme.colors.text
   ctx.font = 'bold 36px system-ui, sans-serif'
   ctx.fillText(myName, myX, scoreY + 60)
   ctx.fillText(oppName, oppX, scoreY + 60)
 
   // VS divider
-  ctx.fillStyle = '#FF1493'
+  ctx.fillStyle = theme.colors.primary
   ctx.font = 'bold 56px system-ui, sans-serif'
   ctx.fillText('vs', W / 2, scoreY - 30)
 
@@ -108,7 +118,7 @@ function drawCard(
   })
 
   // Footer
-  ctx.fillStyle = '#FF1493'
+  ctx.fillStyle = theme.colors.primary
   ctx.font = 'bold 40px system-ui, sans-serif'
   ctx.fillText('kawaiicouple.roastlabai.com', W / 2, cardY + cardH - 80)
   ctx.fillStyle = '#999'
@@ -141,6 +151,7 @@ function wrapText(
 }
 
 export default function DownloadableShareCard(props: Props) {
+  const { theme } = useTheme()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
@@ -151,15 +162,15 @@ export default function DownloadableShareCard(props: Props) {
     canvas.height = H
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    drawCard(ctx, props)
+    drawCard(ctx, props, theme)
     setPreviewUrl(canvas.toDataURL('image/png'))
-  }, [props])
+  }, [props, theme])
 
   function handleDownload() {
     const canvas = canvasRef.current
     if (!canvas) return
     const link = document.createElement('a')
-    link.download = `kawaii-couple-${props.outcome}.png`
+    link.download = `kawaii-couple-${theme.id}-${props.outcome}.png`
     link.href = canvas.toDataURL('image/png')
     link.click()
   }
@@ -190,6 +201,9 @@ export default function DownloadableShareCard(props: Props) {
   return (
     <div className="card-pixel p-5 text-center">
       <p className="pixel-font text-sm text-[#FF1493] mb-3">Save your result card ♡</p>
+      <p className="text-xs font-semibold text-gray-500 mb-3">
+        Theme: {theme.emoji} {theme.name}
+      </p>
       <canvas ref={canvasRef} style={{ display: 'none' }} />
       {previewUrl && (
         <div className="mb-4">
