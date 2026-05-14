@@ -9,6 +9,7 @@ import SakuraPetals from '@/components/SakuraPetals'
 import ShareCard from '@/components/ShareCard'
 import DownloadableShareCard from '@/components/DownloadableShareCard'
 import DownloadCard from '@/components/DownloadCard'
+import LoveCorner from '@/components/LoveCorner'
 import type { User } from '@supabase/supabase-js'
 import type { GameSession, GameScore } from '@/lib/supabase'
 
@@ -52,6 +53,16 @@ export default function ResultsPage() {
     }
     init()
   }, [code, router])
+
+  // Award coins for completing the session
+  useEffect(() => {
+    if (!user || !session) return
+    fetch('/api/love/award', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.id }),
+    })
+  }, [user, session])
 
   // Confetti
   useEffect(() => {
@@ -182,6 +193,9 @@ export default function ResultsPage() {
             </div>
           </div>
         </div>
+
+        {/* Love Corner - pets & coins */}
+        {user && <LoveCorner userId={user.id} />}
 
         {/* Download score card */}
         <div className="mb-6">

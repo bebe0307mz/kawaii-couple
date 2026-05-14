@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import SakuraPetals from '@/components/SakuraPetals'
+import LoveCorner from '@/components/LoveCorner'
 import type { User } from '@supabase/supabase-js'
 
 function DashboardContent() {
@@ -175,6 +176,9 @@ function DashboardContent() {
           </h1>
           <p className="font-semibold text-[#C084FC]">(◕‿◕)✿ Ready to play?</p>
         </div>
+
+        {/* Love Corner - pets & coins */}
+        {user && <LoveCorner userId={user.id} />}
 
         {error && (
           <div className="bg-red-50 border-2 border-red-300 p-3 text-red-600 text-sm font-bold rounded mb-4 text-center">
