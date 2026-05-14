@@ -9,7 +9,6 @@ import SakuraPetals from '@/components/SakuraPetals'
 import ShareCard from '@/components/ShareCard'
 import DownloadableShareCard from '@/components/DownloadableShareCard'
 import DownloadCard from '@/components/DownloadCard'
-import LoveCorner from '@/components/LoveCorner'
 import type { User } from '@supabase/supabase-js'
 import type { GameSession, GameScore } from '@/lib/supabase'
 
@@ -53,16 +52,6 @@ export default function ResultsPage() {
     }
     init()
   }, [code, router])
-
-  // Award coins for completing the session
-  useEffect(() => {
-    if (!user || !session) return
-    fetch('/api/love/award', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.id }),
-    })
-  }, [user, session])
 
   // Confetti
   useEffect(() => {
@@ -121,8 +110,6 @@ export default function ResultsPage() {
     (playerRole === 'player1' && p1Score > p2Score) ||
     (playerRole === 'player2' && p2Score > p1Score)
 
-  const myEmail = playerRole === 'player1' ? session.player1_email : session.player2_email
-  const opponentEmail = playerRole === 'player1' ? session.player2_email : session.player1_email
   const opponentName = (playerRole === 'player1'
     ? (session.player2_username || session.player2_email?.split('@')[0])
     : (session.player1_username || session.player1_email?.split('@')[0])) || 'Babe'
@@ -193,9 +180,6 @@ export default function ResultsPage() {
             </div>
           </div>
         </div>
-
-        {/* Love Corner - pets & coins */}
-        {user && <LoveCorner userId={user.id} />}
 
         {/* Download score card */}
         <div className="mb-6">
