@@ -53,6 +53,16 @@ export default function ResultsPage() {
     init()
   }, [code, router])
 
+  // Bump heart streak (idempotent for the day)
+  useEffect(() => {
+    if (!user) return
+    fetch('/api/streak/ping', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.id }),
+    }).catch(() => {})
+  }, [user])
+
   // Confetti
   useEffect(() => {
     if (!session || confettiRef.current) return
