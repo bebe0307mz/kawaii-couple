@@ -1,253 +1,253 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { supabase } from '@/lib/supabase'
 
 interface TicTacToeProps {
   onComplete: (score: number) => void
   playerEmail: string
+  sessionCode: string
+  isPlayer1: boolean   // player1 = X = moves first
+  opponentName?: string
 }
 
-const GAME_DURATION = 60
 type Cell = 'X' | 'O' | null
-const WIN_LINES: number[][] = [
-  [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
-  [0, 3, 6], [1, 4, 7], [2, 5, 8], // cols
-  [0, 4, 8], [2, 4, 6],            // diagonals
+
+const WINNING_LINES = [
+  [0,1,2],[3,4,5],[6,7,8], // rows
+  [0,3,6],[1,4,7],[2,5,8], // cols
+  [0,4,8],[2,4,6],          // diagonals
 ]
 
-function winner(board: Cell[]): Cell | 'tie' | null {
-  for (const line of WIN_LINES) {
-    const [a, b, c] = line
-    if (board[a] && board[a] === board[b] && board[b] === board[c]) {
-      return board[a]
-    }
+function checkResult(board: Cell[]): 'X' | 'O' | 'draw' | null {
+  for (const [a, b, c] of WINNING_LINES) {
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) return board[a]
   }
-  if (board.every((c) => c !== null)) return 'tie'
+  if (board.every((c) => c !== null)) return 'draw'
   return null
 }
 
-// Simple AI: win > block > center > corner > random
-function aiMove(board: Cell[]): number {
-  const empties = board.map((c, i) => (c === null ? i : -1)).filter((i) => i >= 0)
-  // try to win
-  for (const i of empties) {
-    const next = [...board]
-    next[i] = 'O'
-    if (winner(next) === 'O') return i
+function getWinCells(board: Cell[]): number[] {
+  for (const [a, b, c] of WINNING_LINES) {
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) return [a, b, c]
   }
-  // block player
-  for (const i of empties) {
-    const next = [...board]
-    next[i] = 'X'
-    if (winner(next) === 'X') return i
-  }
-  // center
-  if (board[4] === null) return 4
-  // a corner
-  const corners = [0, 2, 6, 8].filter((i) => board[i] === null)
-  if (corners.length) return corners[Math.floor(Math.random() * corners.length)]
-  // random remaining
-  return empties[Math.floor(Math.random() * empties.length)]
+  return []
 }
 
-export default function TicTacToe({ onComplete, playerEmail: _playerEmail }: TicTacToeProps) {
+const TOTAL_ROUNDS = 3
+
+export default function TicTacToe({ onComplete, playerEmail, sessionCode, isPlayer1, opponentName }: TicTacToeProps) {
+  const mySymbol: Cell = isPlayer1 ? 'X' : 'O'
+  const oppSymbol: Cell = isPlayer1 ? 'O' : 'X'
+  const oppLabel = opponentName || 'Babe'
+
   const [board, setBoard] = useState<Cell[]>(Array(9).fill(null))
-  const [turn, setTurn] = useState<'X' | 'O'>('X')
-  const [timeLeft, setTimeLeft] = useState(GAME_DURATION)
-  const [wins, setWins] = useState(0)
-  const [losses, setLosses] = useState(0)
-  const [ties, setTies] = useState(0)
-  const [roundResult, setRoundResult] = useState<'win' | 'loss' | 'tie' | null>(null)
+  const [xIsNext, setXIsNext] = useState(true)
+  const [score, setScore] = useState(0)
+  const [currentRound, setCurrentRound] = useState(1)
+  const [roundResult, setRoundResult] = useState<'win' | 'lose' | 'draw' | null>(null)
+  const [phase, setPhase] = useState<'playing' | 'roundOver' | 'done'>('playing')
   const [gameOver, setGameOver] = useState(false)
-  const winsRef = useRef(0)
+
+  const scoreRef = useRef(0)
   const gameOverRef = useRef(false)
-  const lockRef = useRef(false)
+  const roundRef = useRef(1)
+  const boardRef = useRef<Cell[]>(Array(9).fill(null))
+  const xIsNextRef = useRef(true)
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const roundOverRef = useRef(false)
 
   const endGame = useCallback(() => {
     if (gameOverRef.current) return
     gameOverRef.current = true
     setGameOver(true)
-    onComplete(winsRef.current)
+    onComplete(scoreRef.current)
   }, [onComplete])
 
-  // Timer
+  const resolveRound = useCallback((newBoard: Cell[]) => {
+    if (roundOverRef.current) return
+    const result = checkResult(newBoard)
+    if (!result) return
+    roundOverRef.current = true
+
+    let myResult: 'win' | 'lose' | 'draw'
+    if (result === 'draw') {
+      myResult = 'draw'
+    } else if (result === mySymbol) {
+      myResult = 'win'
+      scoreRef.current += 1
+      setScore(scoreRef.current)
+    } else {
+      myResult = 'lose'
+    }
+    setRoundResult(myResult)
+    setPhase('roundOver')
+
+    setTimeout(() => {
+      if (gameOverRef.current) return
+      const next = roundRef.current + 1
+      roundRef.current = next
+      if (next > TOTAL_ROUNDS) {
+        setPhase('done')
+        endGame()
+      } else {
+        setCurrentRound(next)
+        const fresh: Cell[] = Array(9).fill(null)
+        boardRef.current = fresh
+        xIsNextRef.current = true
+        setBoard(fresh)
+        setXIsNext(true)
+        setRoundResult(null)
+        setPhase('playing')
+        roundOverRef.current = false
+      }
+    }, 2200)
+  }, [mySymbol, endGame])
+
+  // Subscribe to opponent moves
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval)
-          endGame()
-          return 0
-        }
-        return prev - 1
+    const channel = supabase
+      .channel(`ttt:${sessionCode}`)
+      .on('broadcast', { event: 'ttt_move' }, (payload) => {
+        const p = payload.payload as { player_email: string; cell: number; round: number }
+        if (p.player_email === playerEmail) return
+        if (p.round !== roundRef.current) return
+
+        const newBoard = [...boardRef.current]
+        newBoard[p.cell] = oppSymbol
+        boardRef.current = newBoard
+        xIsNextRef.current = !xIsNextRef.current
+        setBoard([...newBoard])
+        setXIsNext(xIsNextRef.current)
+        resolveRound(newBoard)
       })
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [endGame])
+      .subscribe()
+    channelRef.current = channel
+    return () => { supabase.removeChannel(channel) }
+  }, [sessionCode, playerEmail, oppSymbol, resolveRound])
 
-  const startRound = useCallback(() => {
-    if (gameOverRef.current) return
-    setBoard(Array(9).fill(null))
-    setTurn('X')
-    setRoundResult(null)
-    lockRef.current = false
-  }, [])
+  async function handleCellClick(cellIndex: number) {
+    if (gameOverRef.current || roundOverRef.current || phase !== 'playing') return
+    if (boardRef.current[cellIndex] !== null) return
 
-  function handleTap(idx: number) {
-    if (gameOverRef.current || lockRef.current) return
-    if (turn !== 'X' || board[idx] !== null) return
+    const isMyTurn =
+      (mySymbol === 'X' && xIsNextRef.current) ||
+      (mySymbol === 'O' && !xIsNextRef.current)
+    if (!isMyTurn) return
 
-    const next = [...board]
-    next[idx] = 'X'
-    setBoard(next)
-    const w = winner(next)
-    if (w === 'X') {
-      lockRef.current = true
-      winsRef.current += 1
-      setWins(winsRef.current)
-      setRoundResult('win')
-      setTimeout(startRound, 1100)
-      return
+    const newBoard = [...boardRef.current]
+    newBoard[cellIndex] = mySymbol
+    boardRef.current = newBoard
+    xIsNextRef.current = !xIsNextRef.current
+    setBoard([...newBoard])
+    setXIsNext(xIsNextRef.current)
+
+    if (channelRef.current) {
+      await channelRef.current.send({
+        type: 'broadcast',
+        event: 'ttt_move',
+        payload: { player_email: playerEmail, cell: cellIndex, round: roundRef.current },
+      })
     }
-    if (w === 'tie') {
-      lockRef.current = true
-      setTies((t) => t + 1)
-      setRoundResult('tie')
-      setTimeout(startRound, 1100)
-      return
-    }
-    setTurn('O')
+
+    resolveRound(newBoard)
   }
 
-  // AI plays on its turn
-  useEffect(() => {
-    if (gameOverRef.current || lockRef.current) return
-    if (turn !== 'O') return
-    const t = setTimeout(() => {
-      if (gameOverRef.current || lockRef.current) return
-      const move = aiMove(board)
-      const next = [...board]
-      next[move] = 'O'
-      setBoard(next)
-      const w = winner(next)
-      if (w === 'O') {
-        lockRef.current = true
-        setLosses((l) => l + 1)
-        setRoundResult('loss')
-        setTimeout(startRound, 1100)
-      } else if (w === 'tie') {
-        lockRef.current = true
-        setTies((t) => t + 1)
-        setRoundResult('tie')
-        setTimeout(startRound, 1100)
-      } else {
-        setTurn('X')
-      }
-    }, 400)
-    return () => clearTimeout(t)
-  }, [turn, board, startRound])
+  const isMyTurn =
+    phase === 'playing' &&
+    !gameOver &&
+    ((mySymbol === 'X' && xIsNext) || (mySymbol === 'O' && !xIsNext))
 
-  const progress = ((GAME_DURATION - timeLeft) / GAME_DURATION) * 100
+  const winCells = phase === 'roundOver' ? getWinCells(board) : []
 
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 pt-4 pb-2 flex items-center justify-between">
         <div>
           <div className="pixel-font text-xs text-[#FF1493] mb-1">Tic Tac Toe ❌⭕</div>
-          <div className="font-bold text-2xl text-[#FF69B4]">{wins} wins</div>
+          <div className="font-bold text-lg text-[#FF69B4]">
+            You = {mySymbol === 'X' ? '❌ X' : '⭕ O'} &nbsp;&bull;&nbsp; {score} win{score !== 1 ? 's' : ''}
+          </div>
         </div>
         <div className="text-center">
-          <div className="pixel-font text-lg text-[#FF1493]">{timeLeft}s</div>
-          <div className="text-xs font-semibold text-gray-500">left</div>
+          <div className="pixel-font text-base text-[#FF1493]">{currentRound}/{TOTAL_ROUNDS}</div>
+          <div className="text-xs font-semibold text-gray-500">rounds</div>
         </div>
       </div>
 
       <div className="px-4 mb-2">
         <div className="progress-pixel">
-          <div className="progress-fill" style={{ width: `${progress}%` }} />
+          <div className="progress-fill" style={{ width: `${((currentRound - 1) / TOTAL_ROUNDS) * 100}%` }} />
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-4 gap-3 bg-gradient-to-b from-pink-50 to-pink-100 border-t-2 border-[#FF69B4]">
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 px-4 bg-gradient-to-b from-pink-50 to-pink-100 border-t-2 border-[#FF69B4]">
         {gameOver ? (
           <div className="text-center">
-            <div className="text-5xl mb-3">❌⭕</div>
-            <div className="pixel-font text-base text-[#FF1493] mb-2">Time Up!</div>
-            <div className="font-bold text-3xl text-[#FF69B4]">{wins} wins</div>
-            <p className="text-xs font-semibold text-gray-500 mt-1">
-              {losses} losses · {ties} ties
-            </p>
-            <p className="text-sm font-semibold text-gray-600 mt-2">Waiting for scores~ ♡</p>
+            <div className="text-5xl mb-3">{score >= 2 ? '🏆' : score === 1 ? '💕' : '🤝'}</div>
+            <div className="pixel-font text-xs text-[#FF1493] mb-2">Done!</div>
+            <div className="font-bold text-3xl text-[#FF69B4]">{score}/{TOTAL_ROUNDS} wins</div>
+            <p className="text-sm font-semibold text-gray-500 mt-2">Waiting~ ♡</p>
           </div>
         ) : (
           <>
-            <div className="flex justify-between w-full max-w-xs px-2">
-              <span className="pixel-font text-xs text-[#FF1493]">You: {wins}</span>
-              <span className="pixel-font text-xs text-[#C084FC]">AI: {losses}</span>
-              <span className="pixel-font text-xs text-gray-500">Tie: {ties}</span>
+            {/* Turn / result status */}
+            <div className="min-h-[20px] text-center">
+              {phase === 'roundOver' ? (
+                <p className={`pixel-font text-xs ${
+                  roundResult === 'win' ? 'text-green-500' :
+                  roundResult === 'lose' ? 'text-red-400' : 'text-gray-500'
+                }`}>
+                  {roundResult === 'win'
+                    ? 'You win this round! ♡'
+                    : roundResult === 'lose'
+                    ? `${oppLabel} wins this round~`
+                    : 'Draw! ★'}
+                </p>
+              ) : (
+                <p className={`pixel-font text-xs ${isMyTurn ? 'text-[#FF1493]' : 'text-[#C084FC]'}`}>
+                  {isMyTurn ? 'Your turn~ tap a square! ♡' : `${oppLabel} is thinking... ♡`}
+                </p>
+              )}
             </div>
 
+            {/* Board */}
             <div
               className="grid gap-2 p-2 bg-white border-2 border-black"
               style={{
                 gridTemplateColumns: 'repeat(3, 1fr)',
                 boxShadow: '4px 4px 0px #1a1a1a',
-                width: 280,
               }}
             >
-              {board.map((cell, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleTap(i)}
-                  onTouchStart={(e) => { e.preventDefault(); handleTap(i) }}
-                  disabled={cell !== null || turn !== 'X' || lockRef.current}
-                  style={{
-                    aspectRatio: '1 / 1',
-                    background: cell === null ? '#FFE4F0' : cell === 'X' ? '#FF69B4' : '#C084FC',
-                    border: '3px solid #1a1a1a',
-                    color: 'white',
-                    fontFamily: "'Press Start 2P', monospace",
-                    fontSize: 32,
-                  }}
-                >
-                  {cell || ''}
-                </button>
-              ))}
+              {board.map((cell, i) => {
+                const isWinCell = winCells.includes(i)
+                return (
+                  <button
+                    key={i}
+                    onClick={() => handleCellClick(i)}
+                    onTouchStart={(e) => { e.preventDefault(); handleCellClick(i) }}
+                    style={{
+                      width: 80,
+                      height: 80,
+                      background: isWinCell ? '#FFB6C1' : cell ? '#FF69B4' : isMyTurn ? '#FFF0F5' : '#fff',
+                      border: '3px solid #1a1a1a',
+                      boxShadow: cell ? 'inset -2px -2px 0 rgba(0,0,0,0.15)' : 'none',
+                      fontSize: '2rem',
+                      cursor: !cell && isMyTurn && phase === 'playing' ? 'pointer' : 'default',
+                      transition: 'background 0.15s',
+                    }}
+                  >
+                    {cell === 'X' ? '❌' : cell === 'O' ? '⭕' : ''}
+                  </button>
+                )
+              })}
             </div>
 
-            <p
-              className="pixel-font text-xs h-5 mt-1"
-              style={{
-                color:
-                  roundResult === 'win'
-                    ? '#22C55E'
-                    : roundResult === 'loss'
-                    ? '#EF4444'
-                    : roundResult === 'tie'
-                    ? '#6B7280'
-                    : turn === 'X'
-                    ? '#FF1493'
-                    : '#C084FC',
-              }}
-            >
-              {roundResult === 'win'
-                ? 'you win this round! ✨'
-                : roundResult === 'loss'
-                ? 'AI got it~ next round!'
-                : roundResult === 'tie'
-                ? "tie~ try again!"
-                : turn === 'X'
-                ? 'your turn — place ❌'
-                : 'AI is thinking...'}
-            </p>
+            <div className="text-xs font-semibold text-gray-400 text-center">
+              You {mySymbol === 'X' ? '❌' : '⭕'} &nbsp;vs&nbsp; {oppLabel} {mySymbol === 'X' ? '⭕' : '❌'}
+            </div>
           </>
         )}
-      </div>
-
-      <div className="px-4 py-2 text-center">
-        <p className="text-xs font-semibold text-gray-500">
-          Beat the AI as many times as you can in 60s! ❌⭕ (◕‿◕)
-        </p>
       </div>
     </div>
   )

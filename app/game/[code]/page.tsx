@@ -443,7 +443,7 @@ export default function GamePage() {
       case 27:
         return <ColorMatch onComplete={handleGameComplete} playerEmail={email} />
       case 28:
-        return <TicTacToe onComplete={handleGameComplete} playerEmail={email} />
+        return <TicTacToe onComplete={handleGameComplete} playerEmail={email} sessionCode={code} isPlayer1={playerRole === 'player1'} opponentName={oppLabel} />
       case 29:
         return <QuickCount onComplete={handleGameComplete} playerEmail={email} />
       default:
