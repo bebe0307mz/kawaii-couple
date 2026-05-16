@@ -67,10 +67,21 @@ export default async function JoinPage({ params }: Props) {
               </div>
             </div>
 
-            {sessionStatus === 'waiting' ? (
+            {sessionStatus === 'finished' ? (
+              <>
+                <p className="font-semibold text-gray-500 mb-4 text-sm">
+                  This game session has already finished~ ♡
+                </p>
+                <Link href="/auth" className="btn-pixel btn-pixel-lavender block w-full text-center">
+                  Start a New Game ✿
+                </Link>
+              </>
+            ) : (
               <>
                 <p className="font-semibold text-gray-600 mb-6 text-sm">
-                  Sign in to accept the invite and join the game~ ✿
+                  {sessionStatus === 'playing'
+                    ? 'Your babe already opened the game~ sign in to jump in ♡'
+                    : 'Sign in to accept the invite and join the game~ ✿'}
                 </p>
                 <Link
                   href={`/auth?code=${upperCode}`}
@@ -81,15 +92,6 @@ export default async function JoinPage({ params }: Props) {
                 <p className="text-xs font-semibold text-gray-400 mt-4">
                   No password needed — magic link login ♡
                 </p>
-              </>
-            ) : (
-              <>
-                <p className="font-semibold text-gray-500 mb-4 text-sm">
-                  This game session has already started or ended.
-                </p>
-                <Link href="/auth" className="btn-pixel btn-pixel-lavender block w-full text-center">
-                  Start a New Game ✿
-                </Link>
               </>
             )}
           </div>

@@ -110,9 +110,11 @@ function DashboardContent() {
 
       const session = data.session
 
-      // Already in this session as player 1 or 2 - just rejoin
+      // Already in this session as player 1 or 2 - rejoin where they left off
       if (session.player1_id === user.id || session.player2_id === user.id) {
-        router.push(`/lobby/${code}`)
+        if (session.status === 'playing') router.push(`/game/${code}`)
+        else if (session.status === 'finished') router.push(`/results/${code}`)
+        else router.push(`/lobby/${code}`)
         return
       }
 
