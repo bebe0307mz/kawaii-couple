@@ -127,49 +127,48 @@ export default function QuickCount({ onComplete, playerEmail: _playerEmail }: Qu
         </div>
       </div>
 
-      <div className="relative flex-1 flex flex-col items-center justify-center px-4 bg-gradient-to-b from-pink-50 to-pink-100 border-t-2 border-[#FF69B4] overflow-hidden">
+      {/* Game area: purely a `relative` block so absolute children always resolve */}
+      <div
+        className="relative flex-1 bg-gradient-to-b from-pink-50 to-pink-100 border-t-2 border-[#FF69B4] overflow-hidden"
+        style={{ minHeight: 220 }}
+      >
         {gameOver ? (
-          <div className="text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
             <div className="text-5xl mb-3">📊</div>
             <div className="pixel-font text-base text-[#FF1493] mb-2">Time Up!</div>
             <div className="font-bold text-3xl text-[#FF69B4]">{score} correct</div>
             <p className="text-sm font-semibold text-gray-600 mt-2">Waiting for scores~ ♡</p>
           </div>
         ) : phase === 'flash' ? (
-          <div className="relative w-full h-full" style={{ minHeight: 280 }}>
-            <div
-              style={{
-                position: 'absolute',
-                top: 8,
-                left: 0,
-                right: 0,
-                textAlign: 'center',
-                pointerEvents: 'none',
-              }}
-              className="pixel-font text-xs text-[#FF1493]"
-            >
+          /* Emojis rendered directly relative to parent - no wrapper height issues */
+          <>
+            <div className="absolute top-2 left-0 right-0 text-center pointer-events-none pixel-font text-xs text-[#FF1493]">
               count fast! ✿
             </div>
             {round.positions.map((p, i) => (
-              <div
+              <span
                 key={i}
                 style={{
                   position: 'absolute',
                   left: `${p.x}%`,
                   top: `${p.y}%`,
-                  fontSize: 42,
-                  transform: 'translate(-50%, -50%)',
+                  fontSize: '2.2rem',
                   lineHeight: 1,
+                  transform: 'translate(-50%, -50%)',
+                  userSelect: 'none',
+                  pointerEvents: 'none',
                 }}
               >
                 {round.emoji}
-              </div>
+              </span>
             ))}
-          </div>
+          </>
         ) : (
-          <div className="flex flex-col items-center gap-6 w-full">
-            <div className="card-pixel p-4 text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 px-4">
+            <div className="card-pixel p-4 text-center w-full max-w-xs">
               <p className="pixel-font text-xs text-[#FF1493] mb-2">How many {round.emoji}?</p>
+              {feedback === 'good' && <p className="text-green-600 font-bold text-sm">Correct! ✓ ♡</p>}
+              {feedback === 'bad' && <p className="text-red-500 font-bold text-sm">It was {round.count}! ✗</p>}
             </div>
             <div className="grid grid-cols-2 gap-3 w-full max-w-xs">
               {round.options.map((n) => (
@@ -178,10 +177,9 @@ export default function QuickCount({ onComplete, playerEmail: _playerEmail }: Qu
                   onClick={() => handlePick(n)}
                   onTouchStart={(e) => { e.preventDefault(); handlePick(n) }}
                   className="btn-pixel py-4 text-lg"
+                  disabled={phase === 'feedback'}
                   style={{
-                    background: feedback === 'good' && n === round.count ? '#86EFAC'
-                      : feedback === 'bad' && n === round.count ? '#86EFAC'
-                      : undefined,
+                    background: phase === 'feedback' && n === round.count ? '#86EFAC' : undefined,
                   }}
                 >
                   {n}

@@ -10,6 +10,7 @@ interface SlidePuzzleProps {
 const GAME_DURATION = 90
 const SIZE = 3
 const SCRAMBLE_MOVES = 12 // lighter scramble = easier to solve in time
+const TILE_EMOJIS = ['🌸', '💝', '⭐', '🎀', '🍡', '🌈', '🦋', '🐱'] // 8 tiles, index 0..7 = val 1..8
 
 function newBoard(): number[] {
   // 0 = empty. Use 1..8 plus 0 for blank.
@@ -86,9 +87,8 @@ export default function SlidePuzzle({ onComplete, playerEmail: _playerEmail }: S
     setMoves(newMoves)
     setBoard(next)
     if (isSolved(next)) {
-      // Points: more for fewer moves. Min ~20 moves. Cap at 30 - newMoves, min 5.
-      const pts = Math.max(5, 35 - newMoves)
-      scoreRef.current += pts
+      // Flat 10 pts per solve - simple and clear
+      scoreRef.current += 10
       setScore(scoreRef.current)
       setSolvedCount((c) => c + 1)
       // Reset to new puzzle
@@ -156,11 +156,10 @@ export default function SlidePuzzle({ onComplete, playerEmail: _playerEmail }: S
                     border: '3px solid #1a1a1a',
                     boxShadow: val === 0 ? 'none' : 'inset -3px -3px 0 rgba(0,0,0,0.2)',
                     color: 'white',
-                    fontFamily: "'Press Start 2P', monospace",
-                    fontSize: 18,
+                    fontSize: 28,
                   }}
                 >
-                  {val === 0 ? '' : val}
+                  {val === 0 ? '' : TILE_EMOJIS[val - 1]}
                 </button>
               ))}
             </div>
@@ -170,7 +169,7 @@ export default function SlidePuzzle({ onComplete, playerEmail: _playerEmail }: S
 
       <div className="px-4 py-2 text-center">
         <p className="text-xs font-semibold text-gray-500">
-          Slide tiles to order 1-8! Fewer moves = more points (◕‿◕)
+          Slide emojis into the right order~ 10pts per solve! (◕‿◕)
         </p>
       </div>
     </div>
