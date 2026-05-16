@@ -109,17 +109,28 @@ function DashboardContent() {
       }
 
       const session = data.session
-      if (session.status !== 'waiting') {
-        setError('This game already started~ (◕_◕)')
-        setJoining(false)
-        return
-      }
 
-      if (session.player1_id === user.id) {
+      // Already in this session as player 1 or 2 - just rejoin
+      if (session.player1_id === user.id || session.player2_id === user.id) {
         router.push(`/lobby/${code}`)
         return
       }
 
+      // Game finished - can't join
+      if (session.status === 'finished') {
+        setError('This game is already finished~ start a new one! ♡')
+        setJoining(false)
+        return
+      }
+
+      // Player 2 slot taken by someone else
+      if (session.player2_id && session.player2_id !== user.id) {
+        setError('This game is full~ ask your babe for a new code! ♡')
+        setJoining(false)
+        return
+      }
+
+      // Join as player 2 (works for both 'waiting' and 'playing' status)
       const patchRes = await fetch(`/api/sessions/${code}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
