@@ -32,7 +32,7 @@ import DartToss from '@/components/games/DartToss'
 import OddOneOut from '@/components/games/OddOneOut'
 import NumberSequence from '@/components/games/NumberSequence'
 import ColorMatch from '@/components/games/ColorMatch'
-import SlidePuzzle from '@/components/games/SlidePuzzle'
+import TicTacToe from '@/components/games/TicTacToe'
 import QuickCount from '@/components/games/QuickCount'
 import BGMPlayer from '@/components/BGMPlayer'
 import type { User } from '@supabase/supabase-js'
@@ -443,7 +443,7 @@ export default function GamePage() {
       case 27:
         return <ColorMatch onComplete={handleGameComplete} playerEmail={email} />
       case 28:
-        return <SlidePuzzle onComplete={handleGameComplete} playerEmail={email} />
+        return <TicTacToe onComplete={handleGameComplete} playerEmail={email} />
       case 29:
         return <QuickCount onComplete={handleGameComplete} playerEmail={email} />
       default:

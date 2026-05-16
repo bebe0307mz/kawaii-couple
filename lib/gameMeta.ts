@@ -42,7 +42,7 @@ const RAW: Omit<GameMeta, 'index' | 'name' | 'emoji' | 'slug'>[] = [
   { tagline: 'Find the one that does not match', description: 'A grid of nearly-identical emojis. Tap the odd one out as fast as you can.', howToPlay: 'Scan the grid. Tap the emoji that does not match the others. Ten rounds, fastest total time wins.', whyFun: 'Eyes start to lie at higher speeds. Hilarious.', skill: 'visual discrimination', duration: '~60 seconds' },
   { tagline: 'Continue the number sequence', description: 'Logic puzzle. Spot the pattern and pick the next number in the sequence.', howToPlay: 'Read the sequence. Tap the correct next number from four choices. Five rounds total.', whyFun: 'Pure brain. Reveals who is actually quicker mentally.', skill: 'pattern recognition', duration: '~90 seconds' },
   { tagline: 'Match colors as they appear', description: 'Pairs of colored shapes appear. Tap only when their colors match exactly.', howToPlay: 'Watch the two shapes. Tap MATCH if colors are identical, SKIP if not. Speed and accuracy both score.', whyFun: 'Pace builds and your brain stops trusting itself.', skill: 'attention + speed', duration: '60 seconds' },
-  { tagline: 'Slide the kawaii puzzle into order', description: 'A 3x3 slide puzzle of a sakura scene. Solve it fastest.', howToPlay: 'Tap tiles next to the empty space to slide them. Reconstruct the picture. Fastest solve wins.', whyFun: 'Classic puzzle, fresh visuals. Some people lose their minds at this.', skill: 'spatial reasoning', duration: '~120 seconds' },
+  { tagline: 'Outsmart the AI at classic tic tac toe', description: 'Race the clock against a smart AI opponent. Win as many tic tac toe rounds as you can in 60 seconds.', howToPlay: 'You are X. Tap a square to place your mark. The AI plays O immediately after. First to three in a row wins the round. Stack up wins before time runs out.', whyFun: 'Classic three-in-a-row except now you and your partner each race a snippy little kawaii AI. Strategy meets reflex.', skill: 'strategy + speed', duration: '60 seconds' },
   { tagline: 'Count the kawaii items at a glance', description: 'A flash of items on screen. How many were there? Closest guess wins.', howToPlay: 'A bunch of items flashes for a moment. Tap the count. Five rounds total.', whyFun: 'Tests how good your eye actually is. Wildly different results.', skill: 'numerical estimation', duration: '~45 seconds' },
 ]
 
@@ -75,7 +75,7 @@ const SLUGS = [
   'odd-one-out',
   'number-sequence',
   'color-match',
-  'slide-puzzle',
+  'tic-tac-toe',
   'quick-count',
 ]
 

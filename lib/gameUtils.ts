@@ -42,13 +42,13 @@ export const GAME_NAMES = [
   'Odd One Out',
   'Number Sequence',
   'Color Match',
-  'Slide Puzzle',
+  'Tic Tac Toe',
   'Quick Count',
 ]
 
 export const GAME_EMOJIS = [
   '💝', '🃏', '⚡', '🔤', '🧠', '🎯', '🔢', '🎨', '🌸', '💬', '🎵', '⌨️', '✂️', '🌟', '🔢',
-  '🐟', '🎈', '🥢', '🎰', '⚡', '🔔', '🐾', '🍡', '🪅', '🎯', '🃏', '🔢', '🎨', '🧩', '📊',
+  '🐟', '🎈', '🥢', '🎰', '⚡', '🔔', '🐾', '🍡', '🪅', '🎯', '🃏', '🔢', '🎨', '⭕', '📊',
 ]
 
 export function selectGamesForSession(code: string): number[] {
