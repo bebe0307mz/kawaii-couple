@@ -7,18 +7,22 @@ interface SlidePuzzleProps {
   playerEmail: string
 }
 
-const GAME_DURATION = 60
+const GAME_DURATION = 90
 const SIZE = 3
+const SCRAMBLE_MOVES = 12 // lighter scramble = easier to solve in time
 
 function newBoard(): number[] {
-  // 0 = empty (represented as 9 below). Use 0..8 with 0 = blank.
+  // 0 = empty. Use 1..8 plus 0 for blank.
   const arr = [1, 2, 3, 4, 5, 6, 7, 8, 0]
-  // Random scramble via legal moves to keep solvable
   let blank = 8
-  for (let i = 0; i < 60; i++) {
-    const neighbors = neighborsOf(blank)
+  let prevBlank = -1
+  // Random scramble via legal moves to keep solvable.
+  // Avoid undoing the previous move so the scramble actually moves tiles around.
+  for (let i = 0; i < SCRAMBLE_MOVES; i++) {
+    const neighbors = neighborsOf(blank).filter((n) => n !== prevBlank)
     const pick = neighbors[Math.floor(Math.random() * neighbors.length)]
     ;[arr[blank], arr[pick]] = [arr[pick], arr[blank]]
+    prevBlank = blank
     blank = pick
   }
   return arr

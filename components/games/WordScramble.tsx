@@ -153,7 +153,7 @@ export default function WordScramble({ onComplete, playerEmail, sessionCode }: W
                 </div>
               </div>
               <p className="text-xs font-semibold text-gray-400">
-                Hint: It's a kawaii Japanese word~ ♡
+                Hint: It's a cute English word~ ♡
               </p>
             </div>
 

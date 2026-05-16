@@ -8,7 +8,6 @@ import { GAME_NAMES, GAME_EMOJIS } from '@/lib/gameUtils'
 import SakuraPetals from '@/components/SakuraPetals'
 import ShareCard from '@/components/ShareCard'
 import DownloadableShareCard from '@/components/DownloadableShareCard'
-import DownloadCard from '@/components/DownloadCard'
 import type { User } from '@supabase/supabase-js'
 import type { GameSession, GameScore } from '@/lib/supabase'
 
@@ -189,18 +188,6 @@ export default function ResultsPage() {
               <div className="text-xs font-bold text-gray-400">games won</div>
             </div>
           </div>
-        </div>
-
-        {/* Download score card */}
-        <div className="mb-6">
-          <DownloadCard
-            player1Name={session.player1_username || session.player1_email?.split('@')[0] || 'Player 1'}
-            player2Name={session.player2_username || session.player2_email?.split('@')[0] || 'Player 2'}
-            player1Score={p1Score}
-            player2Score={p2Score}
-            isWinner={isWinner}
-            isTie={isTie}
-          />
         </div>
 
         {/* Game by game breakdown - only played games */}

@@ -8,6 +8,21 @@ interface DartTossProps {
 }
 
 const GAME_DURATION = 45
+const THROW_COOLDOWN = 900 // ms - prevents spam, keeps both players on equal footing
+
+// Deterministic target sequence so both players see identical targets.
+// Pre-baked positions cycle on a fixed 1.5s interval. Random rotation across
+// each player is removed - both clients now compute the same target on each tick.
+const TARGET_POSITIONS: { x: number; y: number }[] = [
+  { x: 30, y: 30 }, { x: 70, y: 35 }, { x: 50, y: 50 },
+  { x: 25, y: 65 }, { x: 75, y: 70 }, { x: 40, y: 25 },
+  { x: 60, y: 75 }, { x: 35, y: 50 }, { x: 65, y: 45 },
+  { x: 50, y: 30 }, { x: 30, y: 60 }, { x: 70, y: 55 },
+  { x: 45, y: 40 }, { x: 55, y: 60 }, { x: 25, y: 40 },
+  { x: 75, y: 50 }, { x: 50, y: 70 }, { x: 40, y: 55 },
+  { x: 60, y: 30 }, { x: 35, y: 75 }, { x: 65, y: 25 },
+  { x: 55, y: 45 }, { x: 45, y: 65 }, { x: 50, y: 50 },
+]
 
 export default function DartToss({ onComplete, playerEmail: _playerEmail }: DartTossProps) {
   const [score, setScore] = useState(0)
@@ -16,10 +31,14 @@ export default function DartToss({ onComplete, playerEmail: _playerEmail }: Dart
   const [bullY, setBullY] = useState(50)
   const [lastHit, setLastHit] = useState<{ pts: number; x: number; y: number } | null>(null)
   const [gameOver, setGameOver] = useState(false)
+  const [cooldownPct, setCooldownPct] = useState(100) // 100 = ready, 0 = cooling
   const scoreRef = useRef(0)
   const gameOverRef = useRef(false)
   const bullRef = useRef({ x: 50, y: 50 })
-  const targetRef = useRef({ x: 50, y: 50 })
+  const targetRef = useRef({ x: TARGET_POSITIONS[0].x, y: TARGET_POSITIONS[0].y })
+  const targetIdxRef = useRef(0)
+  const lastThrowRef = useRef(0)
+  const cooldownAnimRef = useRef<number | null>(null)
 
   const endGame = useCallback(() => {
     if (gameOverRef.current) return
@@ -42,10 +61,12 @@ export default function DartToss({ onComplete, playerEmail: _playerEmail }: Dart
     return () => clearInterval(interval)
   }, [endGame])
 
-  // Pick a new target periodically
+  // Cycle through the deterministic target sequence on a 1.5s interval.
+  // Both players land on the same target at the same time so the game is fair.
   useEffect(() => {
     const interval = setInterval(() => {
-      targetRef.current = { x: 20 + Math.random() * 60, y: 20 + Math.random() * 60 }
+      targetIdxRef.current = (targetIdxRef.current + 1) % TARGET_POSITIONS.length
+      targetRef.current = TARGET_POSITIONS[targetIdxRef.current]
     }, 1500)
     return () => clearInterval(interval)
   }, [])
@@ -76,7 +97,11 @@ export default function DartToss({ onComplete, playerEmail: _playerEmail }: Dart
 
   function handleThrow() {
     if (gameOverRef.current) return
-    // Crosshair is fixed at center (50,50). Bullseye is at bullRef.
+    const now = Date.now()
+    if (now - lastThrowRef.current < THROW_COOLDOWN) return
+    lastThrowRef.current = now
+
+    // Score based on distance from center (50,50)
     const dx = bullRef.current.x - 50
     const dy = bullRef.current.y - 50
     const dist = Math.sqrt(dx * dx + dy * dy)
@@ -87,10 +112,26 @@ export default function DartToss({ onComplete, playerEmail: _playerEmail }: Dart
     scoreRef.current += pts
     setScore(scoreRef.current)
     setLastHit({ pts, x: bullRef.current.x, y: bullRef.current.y })
-    setTimeout(() => setLastHit(null), 500)
+    setTimeout(() => setLastHit(null), 600)
+
+    // Animate cooldown bar
+    if (cooldownAnimRef.current) cancelAnimationFrame(cooldownAnimRef.current)
+    setCooldownPct(0)
+    const throwTime = now
+    function animateCooldown() {
+      const elapsed = Date.now() - throwTime
+      if (elapsed >= THROW_COOLDOWN) {
+        setCooldownPct(100)
+        return
+      }
+      setCooldownPct((elapsed / THROW_COOLDOWN) * 100)
+      cooldownAnimRef.current = requestAnimationFrame(animateCooldown)
+    }
+    cooldownAnimRef.current = requestAnimationFrame(animateCooldown)
   }
 
   const progress = ((GAME_DURATION - timeLeft) / GAME_DURATION) * 100
+  const isReady = cooldownPct >= 100
 
   return (
     <div className="flex flex-col h-full">
@@ -105,9 +146,29 @@ export default function DartToss({ onComplete, playerEmail: _playerEmail }: Dart
         </div>
       </div>
 
-      <div className="px-4 mb-2">
+      <div className="px-4 mb-1">
         <div className="progress-pixel">
           <div className="progress-fill" style={{ width: `${progress}%` }} />
+        </div>
+      </div>
+
+      {/* Throw cooldown bar */}
+      <div className="px-4 mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-[#FF1493]">🎯</span>
+          <div className="flex-1 h-2 bg-pink-100 border border-pink-300 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${cooldownPct}%`,
+                background: isReady ? '#FF1493' : '#FFB6C1',
+                transition: 'none',
+              }}
+            />
+          </div>
+          <span className="text-xs font-bold" style={{ color: isReady ? '#FF1493' : '#FFB6C1', minWidth: 44 }}>
+            {isReady ? 'THROW!' : '...'}
+          </span>
         </div>
       </div>
 
@@ -168,7 +229,7 @@ export default function DartToss({ onComplete, playerEmail: _playerEmail }: Dart
                 }}
                 className="pixel-font text-lg text-[#FF1493]"
               >
-                +{lastHit.pts}
+                {lastHit.pts > 0 ? `+${lastHit.pts}` : 'miss'}
               </div>
             )}
 
@@ -180,6 +241,7 @@ export default function DartToss({ onComplete, playerEmail: _playerEmail }: Dart
                 inset: 0,
                 background: 'transparent',
                 border: 'none',
+                cursor: isReady ? 'crosshair' : 'not-allowed',
               }}
               aria-label="Throw dart"
             />
@@ -198,7 +260,7 @@ export default function DartToss({ onComplete, playerEmail: _playerEmail }: Dart
 
       <div className="px-4 py-2 text-center">
         <p className="text-xs font-semibold text-gray-500">
-          Tap when 🎯 aligns with crosshair! Center=3, ring=2, outer=1 (◕‿◕)
+          Wait for THROW! then tap when 🎯 hits the center~ ♡
         </p>
       </div>
     </div>

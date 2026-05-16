@@ -8,6 +8,7 @@ interface QuickCountProps {
 }
 
 const GAME_DURATION = 45
+const FLASH_MS = 2500 // emojis visible long enough for human to count
 const EMOJIS = ['🌸', '⭐', '💝', '🍡', '🐱', '🎈', '🐰', '🌟']
 
 type Phase = 'flash' | 'pick' | 'feedback'
@@ -79,7 +80,7 @@ export default function QuickCount({ onComplete, playerEmail: _playerEmail }: Qu
     setTimeout(() => {
       if (gameOverRef.current) return
       setPhase('pick')
-    }, 1500)
+    }, FLASH_MS)
   }, [])
 
   useEffect(() => {
@@ -87,7 +88,7 @@ export default function QuickCount({ onComplete, playerEmail: _playerEmail }: Qu
     const t = setTimeout(() => {
       if (gameOverRef.current) return
       setPhase('pick')
-    }, 1500)
+    }, FLASH_MS)
     return () => clearTimeout(t)
   }, [])
 
@@ -135,7 +136,20 @@ export default function QuickCount({ onComplete, playerEmail: _playerEmail }: Qu
             <p className="text-sm font-semibold text-gray-600 mt-2">Waiting for scores~ ♡</p>
           </div>
         ) : phase === 'flash' ? (
-          <div className="relative w-full h-full">
+          <div className="relative w-full h-full" style={{ minHeight: 280 }}>
+            <div
+              style={{
+                position: 'absolute',
+                top: 8,
+                left: 0,
+                right: 0,
+                textAlign: 'center',
+                pointerEvents: 'none',
+              }}
+              className="pixel-font text-xs text-[#FF1493]"
+            >
+              count fast! ✿
+            </div>
             {round.positions.map((p, i) => (
               <div
                 key={i}
@@ -143,8 +157,9 @@ export default function QuickCount({ onComplete, playerEmail: _playerEmail }: Qu
                   position: 'absolute',
                   left: `${p.x}%`,
                   top: `${p.y}%`,
-                  fontSize: 28,
+                  fontSize: 42,
                   transform: 'translate(-50%, -50%)',
+                  lineHeight: 1,
                 }}
               >
                 {round.emoji}

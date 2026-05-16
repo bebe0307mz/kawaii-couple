@@ -64,8 +64,9 @@ export function selectGamesForSession(code: string): number[] {
 }
 
 export const KAWAII_WORDS = [
-  'SAKURA', 'KAWAII', 'MOCHI', 'SENPAI', 'BENTO',
-  'ANIME', 'MATCHA', 'HANAMI', 'KIMONO', 'YUKATA',
+  'LOVE', 'CUTE', 'HEART', 'KITTY', 'PUPPY',
+  'BUNNY', 'HONEY', 'TEDDY', 'CLOUD', 'SMILE',
+  'ANGEL', 'HAPPY', 'SWEET', 'SUGAR', 'DAISY',
 ]
 
 export function scrambleWord(word: string): string {
