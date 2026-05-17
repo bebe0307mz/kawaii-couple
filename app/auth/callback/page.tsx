@@ -2,7 +2,21 @@
 
 import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+
+function notifySignupIfNew(user: User | null | undefined) {
+  if (!user?.email || !user?.id) return
+  if (sessionStorage.getItem('signup_notified')) return
+  const isNewSignup = Date.now() - new Date(user.created_at).getTime() < 60_000
+  if (!isNewSignup) return
+  sessionStorage.setItem('signup_notified', '1')
+  fetch('/api/notify-signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: user.email, userId: user.id }),
+  }).catch(() => {})
+}
 
 function CallbackHandler() {
   const router = useRouter()
@@ -21,6 +35,7 @@ function CallbackHandler() {
           router.replace('/auth?error=login_failed')
         } else {
           if (joinCode) sessionStorage.removeItem('pendingJoinCode')
+          notifySignupIfNew(data.user)
           const hasUsername = data.user?.user_metadata?.username
           router.replace(hasUsername ? dashboardUrl : '/setup')
         }
@@ -29,6 +44,7 @@ function CallbackHandler() {
         const { data: { session } } = await supabase.auth.getSession()
         if (session) {
           if (joinCode) sessionStorage.removeItem('pendingJoinCode')
+          notifySignupIfNew(session.user)
           const hasUsername = session.user?.user_metadata?.username
           router.replace(hasUsername ? dashboardUrl : '/setup')
         } else {
