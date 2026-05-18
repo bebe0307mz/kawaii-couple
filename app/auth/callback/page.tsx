@@ -29,24 +29,31 @@ function CallbackHandler() {
       const dashboardUrl = joinCode ? `/dashboard?code=${joinCode}` : '/dashboard'
 
       if (code) {
-        // PKCE flow - exchange code for session
         const { data, error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
           router.replace('/auth?error=login_failed')
         } else {
-          if (joinCode) sessionStorage.removeItem('pendingJoinCode')
           notifySignupIfNew(data.user)
           const hasUsername = data.user?.user_metadata?.username
-          router.replace(hasUsername ? dashboardUrl : '/setup')
+          if (hasUsername) {
+            if (joinCode) sessionStorage.removeItem('pendingJoinCode')
+            router.replace(dashboardUrl)
+          } else {
+            // New user - keep pendingJoinCode in sessionStorage so /setup can forward it
+            router.replace('/setup')
+          }
         }
       } else {
-        // Implicit flow - session already set via hash, just check
         const { data: { session } } = await supabase.auth.getSession()
         if (session) {
-          if (joinCode) sessionStorage.removeItem('pendingJoinCode')
           notifySignupIfNew(session.user)
           const hasUsername = session.user?.user_metadata?.username
-          router.replace(hasUsername ? dashboardUrl : '/setup')
+          if (hasUsername) {
+            if (joinCode) sessionStorage.removeItem('pendingJoinCode')
+            router.replace(dashboardUrl)
+          } else {
+            router.replace('/setup')
+          }
         } else {
           router.replace('/auth')
         }

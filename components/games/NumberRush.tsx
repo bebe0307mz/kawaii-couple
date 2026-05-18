@@ -39,10 +39,12 @@ export default function NumberRush({ onComplete, playerEmail }: NumberRushProps)
 
     let sc: number
     if (reachedNext > GRID_SIZE) {
-      // Finished! score = 10000 - elapsed, min 0
-      sc = Math.max(0, 10000 - elapsedMs)
+      // Finished! score = time remaining (faster = higher score)
+      // TIME_LIMIT - elapsedMs is always > 0 since player finishes before timer runs out
+      sc = TIME_LIMIT - elapsedMs
     } else {
-      // Score = highest number reached
+      // Did not finish - score = how many numbers reached (0 to GRID_SIZE-1)
+      // Cap below TIME_LIMIT so finishers always beat non-finishers
       sc = reachedNext - 1
     }
     onComplete(sc)

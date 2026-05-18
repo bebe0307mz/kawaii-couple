@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
@@ -29,6 +29,20 @@ function DashboardContent() {
       setPartnerCode(codeParam.toUpperCase())
     }
   }, [searchParams])
+
+  // Auto-join when arriving with ?code=X — invited partners should not have to
+  // hunt for a Join button. Fires once `user` is loaded and partnerCode is set.
+  const autoJoinedRef = useRef(false)
+  useEffect(() => {
+    if (autoJoinedRef.current) return
+    if (!user) return
+    const codeParam = searchParams.get('code')
+    if (!codeParam) return
+    if (!partnerCode) return
+    autoJoinedRef.current = true
+    handleJoinSession()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, partnerCode, searchParams])
 
   useEffect(() => {
     async function loadUser() {

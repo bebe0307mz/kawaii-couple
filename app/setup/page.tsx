@@ -12,6 +12,16 @@ export default function SetupPage() {
   const [checking, setChecking] = useState(true)
   const [error, setError] = useState('')
 
+  function nextRouteAfterSetup() {
+    if (typeof window === 'undefined') return '/dashboard'
+    const joinCode = sessionStorage.getItem('pendingJoinCode')
+    if (joinCode) {
+      sessionStorage.removeItem('pendingJoinCode')
+      return `/dashboard?code=${joinCode}`
+    }
+    return '/dashboard'
+  }
+
   useEffect(() => {
     async function checkAuth() {
       const { data: { user } } = await supabase.auth.getUser()
@@ -19,9 +29,9 @@ export default function SetupPage() {
         router.replace('/auth')
         return
       }
-      // Already has username, skip setup
+      // Already has username, skip setup (preserve pending joinCode if any)
       if (user.user_metadata?.username) {
-        router.replace('/dashboard')
+        router.replace(nextRouteAfterSetup())
         return
       }
       setChecking(false)
@@ -52,7 +62,7 @@ export default function SetupPage() {
       setError(err.message)
       setLoading(false)
     } else {
-      router.replace('/dashboard')
+      router.replace(nextRouteAfterSetup())
     }
   }
 
