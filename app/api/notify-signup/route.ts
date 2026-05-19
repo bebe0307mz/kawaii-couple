@@ -12,19 +12,18 @@ export async function POST(request: Request) {
 
     const supabase = createServerSupabaseClient();
 
-    // First app wins: only set signup_source if currently null. The row count
-    // doubles as a dedupe — if no rows updated, this user was already notified
-    // by another roast-lab app.
-    const { count } = await (supabase
-      .from("profiles")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .update({ signup_source: "kawaii" } as any)
-      .eq("id", userId)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .is("signup_source", null) as any)
-      .select("id", { count: "exact", head: true });
+    // Atomic dedupe: insert into signup_notifications. PK conflict means
+    // this user was already notified, so we no-op.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase
+      .from("signup_notifications")
+      .insert({ user_id: userId } as any)
+      .select("user_id") as any);
 
-    if (count && count > 0) {
+    // Postgres unique_violation = 23505 → already notified
+    const fresh = !error && Array.isArray(data) && data.length > 0;
+
+    if (fresh) {
       await fetch(DISCORD_SIGNUP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -44,7 +43,7 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, fresh });
   } catch {
     return NextResponse.json({ ok: false }, { status: 500 });
   }

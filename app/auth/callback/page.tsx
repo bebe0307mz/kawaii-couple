@@ -8,8 +8,6 @@ import { supabase } from '@/lib/supabase'
 function notifySignupIfNew(user: User | null | undefined) {
   if (!user?.email || !user?.id) return
   if (sessionStorage.getItem('signup_notified')) return
-  const isNewSignup = Date.now() - new Date(user.created_at).getTime() < 60_000
-  if (!isNewSignup) return
   sessionStorage.setItem('signup_notified', '1')
   fetch('/api/notify-signup', {
     method: 'POST',
