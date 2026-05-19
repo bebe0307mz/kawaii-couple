@@ -90,7 +90,7 @@ export default function HomePage() {
         {/* Game cards */}
         <section className="mt-12 w-full max-w-4xl">
           <h2 className="pixel-font text-base md:text-lg text-[#FF1493] mb-2">
-            ★ 30 Kawaii Games, 5 Random Per Session ★
+            ★ Play 5 random mini games together ★
           </h2>
           <p className="text-sm font-semibold text-gray-500 mb-8 max-w-md mx-auto">
             Every session draws 5 fresh games. You'll hit new ones for weeks ♡
