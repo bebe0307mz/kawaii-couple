@@ -68,7 +68,7 @@ export default function HomePage() {
         </h1>
 
         <p className="font-nunito text-lg md:text-xl font-800 text-[#FF69B4] mb-2 max-w-md">
-          Play 5 random mini games with your babe.
+          Play 5 random mini games with your babe. 30 to discover ♡
         </p>
         <p className="text-xl font-bold text-[#C084FC] mb-8">
           Who wins today? (◕‿◠)✿
@@ -89,16 +89,19 @@ export default function HomePage() {
 
         {/* Game cards */}
         <section className="mt-12 w-full max-w-4xl">
-          <h2 className="pixel-font text-base md:text-lg text-[#FF1493] mb-8">
-            ★ 5 Random Mini Games ★
+          <h2 className="pixel-font text-base md:text-lg text-[#FF1493] mb-2">
+            ★ 30 Kawaii Games, 5 Random Per Session ★
           </h2>
+          <p className="text-sm font-semibold text-gray-500 mb-8 max-w-md mx-auto">
+            Every session draws 5 fresh games. You'll hit new ones for weeks ♡
+          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {GAMES.map((game, i) => (
               <div key={i} className="card-pixel p-5 text-left hover:translate-y-[-2px] transition-transform">
                 <div className="text-4xl mb-3">{game.emoji}</div>
                 <div className={`inline-block px-2 py-1 text-xs font-bold rounded mb-2 ${game.color}`}>
-                  Game {i + 1}
+                  Sample {i + 1}/30
                 </div>
                 <h3 className="pixel-font text-xs text-[#FF1493] mb-2">{game.name}</h3>
                 <p className="text-sm font-semibold text-gray-600">{game.desc}</p>
@@ -113,10 +116,16 @@ export default function HomePage() {
                 <li>♡ Login with your email</li>
                 <li>♡ Share your invite code</li>
                 <li>♡ Partner joins with the code</li>
-                <li>♡ Play 5 games together!</li>
+                <li>♡ Play 5 random games together!</li>
                 <li>♡ Winner gets bragging rights</li>
               </ul>
             </div>
+          </div>
+
+          <div className="text-center mt-8">
+            <Link href="/games" className="btn-pixel btn-pixel-lavender text-xs py-2 px-4">
+              See all 30 games →
+            </Link>
           </div>
         </section>
 
