@@ -222,7 +222,7 @@ export default function LobbyPage() {
                     Love the vibes already? ☕
                   </p>
                   <a
-                    href="https://ko-fi.com/roastlabai"
+                    href="https://ko-fi.com/kawaiicouple"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-pixel btn-pixel-white text-xs py-2 px-4"

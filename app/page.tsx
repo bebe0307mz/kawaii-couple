@@ -49,7 +49,7 @@ export default function HomePage() {
         <div className="pixel-font text-sm text-[#FF69B4]">Kawaii Couple</div>
         <div className="flex gap-2">
           <a
-            href="https://ko-fi.com/roastlabai"
+            href="https://ko-fi.com/kawaiicouple"
             target="_blank"
             rel="noopener noreferrer"
             className="btn-pixel btn-pixel-white text-xs py-2 px-3"
@@ -135,7 +135,7 @@ export default function HomePage() {
         <div className="mt-12 text-center">
           <p className="font-semibold text-gray-600 mb-3">Love Kawaii Couple? Buy us a coffee~ ♡</p>
           <a
-            href="https://ko-fi.com/roastlabai"
+            href="https://ko-fi.com/kawaiicouple"
             target="_blank"
             rel="noopener noreferrer"
             className="btn-pixel btn-pixel-lavender"

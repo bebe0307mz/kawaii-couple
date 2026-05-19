@@ -285,7 +285,7 @@ export default function ResultsPage() {
               : 'You played with heart~ if today made you smile ☕'}
           </p>
           <a
-            href="https://ko-fi.com/roastlabai"
+            href="https://ko-fi.com/kawaiicouple"
             target="_blank"
             rel="noopener noreferrer"
             className="btn-pixel btn-pixel-lavender"
