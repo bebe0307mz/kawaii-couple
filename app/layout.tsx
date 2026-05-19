@@ -33,6 +33,14 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  verification: {
+    // Google Search Console - paste your verification code here when you get it
+    // google: 'YOUR_GSC_VERIFICATION_CODE',
+    other: {
+      // IndexNow key for Bing/Yandex instant indexing
+      'msvalidate.01': 'kawaiicouple2026',
+    },
+  },
 }
 
 export default function RootLayout({
