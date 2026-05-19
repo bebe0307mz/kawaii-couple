@@ -68,7 +68,7 @@ export default function HomePage() {
         </h1>
 
         <p className="font-nunito text-lg md:text-xl font-800 text-[#FF69B4] mb-2 max-w-md">
-          Play 5 mini games with your babe.
+          Play 5 random mini games with your babe.
         </p>
         <p className="text-xl font-bold text-[#C084FC] mb-8">
           Who wins today? (◕‿◠)✿
@@ -90,7 +90,7 @@ export default function HomePage() {
         {/* Game cards */}
         <section className="mt-12 w-full max-w-4xl">
           <h2 className="pixel-font text-base md:text-lg text-[#FF1493] mb-8">
-            ★ 5 Mini Games ★
+            ★ 5 Random Mini Games ★
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
